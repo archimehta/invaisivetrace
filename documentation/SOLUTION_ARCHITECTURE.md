@@ -59,9 +59,10 @@ The initial catalog is the versioned snapshot at `data/fisc-species.json`, sourc
 - Observation timestamp and exact coordinates
 - Explicit consent for exact public coordinates
 - Private uploader ID and account-linked contribution totals; account identity is omitted from public API responses
+- Coarse locality label for confirmed-report trend summaries; no street-level address is used by the Metrics page
 - Public coordinate projection and moderation status (`unverified`, `verified`, or `needs_review`)
 
-Reporter identity is not included in the public map response. Account-linked metrics and member email are visible only to the moderator. Existing reports from before account sign-in remain anonymous.
+Reporter identity is not included in the public map response. Account-linked metrics and member email are visible only to the moderator. The public leaderboard shows display names only after a member opts in; otherwise it displays an anonymous contributor label. Existing reports from before account sign-in remain anonymous.
 
 ## Stack and service boundaries
 

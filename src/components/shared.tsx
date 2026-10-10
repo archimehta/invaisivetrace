@@ -12,7 +12,7 @@ export type Report = {
 
   listedCategory?: string; observedAt: string; note?: string; latitude: number; longitude: number;
 
-  exactLocationPublic: boolean; reviewStatus: string; photoUrl?: string | null;
+  exactLocationPublic: boolean; reviewStatus: string; photoUrl?: string | null; locationLabel?: string;
 
 };
 
@@ -29,6 +29,14 @@ export const API_URL = (process.env.EXPO_PUBLIC_API_URL || 'http://127.0.0.1:878
 export const ORLANDO: Coordinate = { latitude: 28.5383, longitude: -81.3792 };
 
 export const colors = { ink: '#17372A', muted: '#728075', green: '#244B36', pale: '#E5EDE3', lime: '#DDE6D2', paper: '#FAF9F5', white: '#FFFFFF', border: '#E5E8DF', amber: '#8B5A12', amberPale: '#FFF4DB', red: '#9B443C' };
+
+export function contributorTitle(confirmedReports: number) {
+  if (confirmedReports >= 20) return { name: 'Charles Darwin', next: null as null | { name: string; count: number } };
+  if (confirmedReports >= 10) return { name: 'Tree Hugger', next: { name: 'Charles Darwin', count: 20 } };
+  if (confirmedReports >= 5) return { name: 'Plant Purveyor', next: { name: 'Tree Hugger', count: 10 } };
+  if (confirmedReports >= 1) return { name: 'Nature Novice', next: { name: 'Plant Purveyor', count: 5 } };
+  return { name: 'First confirmation awaits', next: { name: 'Nature Novice', count: 1 } };
+}
 
 
 

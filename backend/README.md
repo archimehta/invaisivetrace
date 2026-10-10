@@ -31,8 +31,10 @@ The API listens on port 8787. Check `http://127.0.0.1:8787/api/health`. Find the
 ## API routes
 
 - `GET /api/health` — readiness, catalog count, Gemini availability.
+- `GET /api/metrics` — public aggregate totals, moderator-confirmed species and area trends, plus an opt-in-name contributor leaderboard.
 - `POST /api/auth/signup`, `POST /api/auth/login`, `POST /api/auth/logout` — normal member registration and sign-in; the configured moderator signs in through the same endpoint.
 - `GET /api/account/metrics` — signed-in member's report, verification, and impact-event totals.
+- `POST /api/account/leaderboard-visibility` — signed-in member opt-in/out for display-name visibility; hidden names remain anonymous on the public leaderboard.
 - `GET /api/moderation/metrics` — moderator-only community totals and per-member contribution counts.
 - `GET /api/species?search=...` — FISC species search.
 - `GET /api/reports` — public-safe report projection (no raw precise coordinates when consent is off).

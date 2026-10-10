@@ -22,6 +22,6 @@ The app requires a photo for a report. If Gemini is unset or unavailable, manual
 
 ## Architecture
 
-PocketBase stores accounts, the catalog, reports, photos, and review status. Community members sign up as regular users; the backend seeds one moderator account from `DEMO_MODERATOR_EMAIL` and `DEMO_MODERATOR_PASSWORD`. Reports are associated with their uploader for private metrics, while public map output omits account identity and generalizes coordinates unless the reporter opts into exact display. See [backend/README.md](backend/README.md) for account setup and service details.
+PocketBase stores accounts, the catalog, reports, photos, and review status. Community members sign up as regular users; the backend seeds one moderator account from `DEMO_MODERATOR_EMAIL` and `DEMO_MODERATOR_PASSWORD`. Reports are associated with their uploader for private metrics. The Metrics page shows trends from confirmed reports, a community upload leaderboard, and titles based on moderator-confirmed sightings. Leaderboard names are opt-in; public map output omits account identity and generalizes coordinates unless the reporter opts into exact display. See [backend/README.md](backend/README.md) for account setup and service details.
 
 See [backend/README.md](backend/README.md) for service setup and [data/README.md](data/README.md) for catalog provenance and refresh.

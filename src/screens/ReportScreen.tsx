@@ -75,7 +75,7 @@ export function ReportScreen({vm}:{vm:SightingsVM}) {
 
       <Text style={styles.helperText}>{locationMessage}</Text><ActionButton title="◎  Use my current location" onPress={() => void setCurrentLocation()} secondary small />
 
-      <View style={{ marginTop: 12 }}><MapPanel center={activeCenter} reports={[]} selectable onPin={(point) => { setLocation(point); setLocationMessage(`Pin set at ${point.latitude.toFixed(5)}, ${point.longitude.toFixed(5)}. Drag it to adjust.`); }} height={235} /></View>
+  <View style={{ marginTop: 12 }}><MapPanel center={activeCenter} reports={[]} selectable onPin={(point) => { void setLocation(point); setLocationMessage(`Pin set at ${point.latitude.toFixed(5)}, ${point.longitude.toFixed(5)}. Drag it to adjust.`); }} height={235} /></View>
 
       {location ? <Text style={styles.coordinateText}>Selected: {location.latitude.toFixed(5)}, {location.longitude.toFixed(5)}</Text> : null}
 

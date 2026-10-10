@@ -74,6 +74,7 @@ async function setupDatabase() {
     text('listedCategory', false, 40), bool('isFiscListed'), text('geminiSuggestion', false, 500),
     text('observedAt', true, 40), text('note', false, 1200),
     number('latitude', true), number('longitude', true), number('publicLatitude', true), number('publicLongitude', true),
+    text('locationLabel', false, 160),
     bool('exactLocationPublic'), text('reviewStatus', true, 32), text('reviewNote', false, 1200),
     text('reporterId', false, 64), text('reporterName', false, 160),
     { name: 'photo', type: 'file', required: true, maxSelect: 1, maxSize: MAX_IMAGE_BYTES, mimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/heic'] },
@@ -99,7 +100,7 @@ async function setupDatabase() {
   // `users` may be a PocketBase auth collection and requires PocketBase passwords.
   // App credentials are custom scrypt hashes, so keep them in a separate base collection.
   await ensureCollection('app_accounts', [
-    text('email', true, 240), text('displayName', true, 120), text('passwordHash', true, 200), text('role', true, 32), bool('active'),
+    text('email', true, 240), text('displayName', true, 120), text('passwordHash', true, 200), text('role', true, 32), bool('active'), bool('leaderboardVisible'),
   ], ['CREATE UNIQUE INDEX idx_app_accounts_email ON app_accounts (email)']);
 
   const email = (process.env.DEMO_MODERATOR_EMAIL || 'moderator@spot-the-spread.local').trim().toLowerCase();
@@ -115,6 +116,7 @@ async function setupDatabase() {
       passwordHash: legacy.passwordHash,
       role: legacyEmail === email ? 'moderator' : 'user',
       active: Boolean(legacy.active),
+      leaderboardVisible: false,
     });
     existingEmails.add(legacyEmail);
   }
@@ -129,7 +131,7 @@ async function setupDatabase() {
     await pb.collection('app_accounts').update(existingModerator.id, changes);
   } else {
     const generatedPassword = password || randomBytes(9).toString('base64url');
-    await pb.collection('app_accounts').create({ email, displayName: 'Community Moderator', role: 'moderator', passwordHash: hashPassword(generatedPassword), active: true });
+    await pb.collection('app_accounts').create({ email, displayName: 'Community Moderator', role: 'moderator', passwordHash: hashPassword(generatedPassword), active: true, leaderboardVisible: false });
     if (!password) console.log(`Demo moderator login: ${email} / ${generatedPassword} (save this password; it is shown only at first setup)`);
   }
 
@@ -178,6 +180,13 @@ const findSpecies = (value) => {
   return catalog.find((species) => speciesNames(species).some((candidate) => normalize(candidate) === wanted)) || null;
 };
 const roundCoordinate = (value) => Number(Number(value).toFixed(mapDecimals));
+function contributorTitle(confirmedReports) {
+  if (confirmedReports >= 20) return 'Charles Darwin';
+  if (confirmedReports >= 10) return 'Tree Hugger';
+  if (confirmedReports >= 5) return 'Plant Purveyor';
+  if (confirmedReports >= 1) return 'Nature Novice';
+  return 'Awaiting first confirmation';
+}
 const fileUrl = (record, filename, publicOrigin, route = 'api/files') => `${publicOrigin}/${route}/${record.id}/${encodeURIComponent(filename)}`;
 async function projectReport(record, publicOrigin = `http://localhost:${PORT}`, { includePrivateLocation = false, includeReporter = false } = {}) {
   const linkedPhotos = await pb.collection('report_photos').getFullList({ filter: `report = "${record.id}"`, sort: 'position' }).catch(() => []);
@@ -193,6 +202,7 @@ async function projectReport(record, publicOrigin = `http://localhost:${PORT}`, 
   sourceUrl: findSpecies(record.speciesId)?.sourceUrl || null,
   geminiSuggestion: record.geminiSuggestion,
   observedAt: record.observedAt,
+  locationLabel: record.locationLabel || 'Orange County, FL',
   note: record.note,
   latitude: includePrivateLocation ? record.latitude : record.publicLatitude,
   longitude: includePrivateLocation ? record.longitude : record.publicLongitude,
@@ -257,6 +267,48 @@ async function addActivity(reportId, event) {
 }
 
 app.get('/api/health', (_req, res) => res.json({ ok: true, accountSystem: true, catalogCount: catalog.length, geminiEnabled: Boolean(process.env.GEMINI_API_KEY) }));
+app.get('/api/metrics', async (_req, res, next) => {
+  try {
+    const [reports, accounts] = await Promise.all([
+      pb.collection('reports').getFullList({ filter: 'reviewStatus != "rejected"', fields: 'speciesName,scientificName,listedCategory,reviewStatus,locationLabel,reporterId' }),
+      pb.collection('app_accounts').getFullList({ fields: 'id,displayName,role,leaderboardVisible' }),
+    ]);
+    const confirmed = reports.filter((report) => report.reviewStatus === 'verified');
+    const awaiting = reports.filter((report) => ['unverified', 'needs_review'].includes(report.reviewStatus));
+    const speciesCounts = new Map();
+    for (const report of confirmed) {
+      const name = String(report.speciesName || 'Unidentified plant');
+      const scientificName = String(report.scientificName || '');
+      const key = `${scientificName.toLowerCase()}|${name.toLowerCase()}`;
+      const item = speciesCounts.get(key) || { name, scientificName, category: report.listedCategory || null, count: 0 };
+      item.count += 1;
+      speciesCounts.set(key, item);
+    }
+    const locationCounts = new Map();
+    for (const report of confirmed) {
+      const label = String(report.locationLabel || 'Orange County, FL').trim().slice(0, 100) || 'Orange County, FL';
+      locationCounts.set(label, (locationCounts.get(label) || 0) + 1);
+    }
+    const countsByUser = new Map();
+    for (const report of reports) {
+      if (!report.reporterId) continue;
+      const item = countsByUser.get(report.reporterId) || { reportsSubmitted: 0, confirmedReports: 0 };
+      item.reportsSubmitted += 1;
+      if (report.reviewStatus === 'verified') item.confirmedReports += 1;
+      countsByUser.set(report.reporterId, item);
+    }
+    const leaderboard = accounts.filter((account) => account.role === 'user').map((account) => {
+      const contribution = countsByUser.get(account.id) || { reportsSubmitted: 0, confirmedReports: 0 };
+      return { name: account.leaderboardVisible ? account.displayName : 'Anonymous contributor', reportsSubmitted: contribution.reportsSubmitted, confirmedReports: contribution.confirmedReports, title: contributorTitle(contribution.confirmedReports) };
+    }).filter((item) => item.reportsSubmitted > 0).sort((a, b) => b.reportsSubmitted - a.reportsSubmitted || b.confirmedReports - a.confirmedReports).slice(0, 20).map((item, index) => ({ rank: index + 1, ...item }));
+    res.json({
+      summary: { reportsSubmitted: reports.length, confirmedReports: confirmed.length, awaitingReview: awaiting.length },
+      topSpecies: [...speciesCounts.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)).slice(0, 5),
+      topLocations: [...locationCounts.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)).slice(0, 5),
+      leaderboard,
+    });
+  } catch (error) { next(error); }
+});
 app.post('/api/auth/signup', async (req, res, next) => {
   try {
     const email = String(req.body?.email || '').trim().toLowerCase();
@@ -267,10 +319,10 @@ app.post('/api/auth/signup', async (req, res, next) => {
     if (password.length < 8) return res.status(400).json({ error: 'Use a password with at least 8 characters.' });
     const duplicate = await pb.collection('app_accounts').getFirstListItem(`email = "${email.replaceAll('"', '')}"`).catch(() => null);
     if (duplicate) return res.status(409).json({ error: 'An account already exists for that email.' });
-    const user = await pb.collection('app_accounts').create({ email, displayName, passwordHash: hashPassword(password), role: 'user', active: true });
+    const user = await pb.collection('app_accounts').create({ email, displayName, passwordHash: hashPassword(password), role: 'user', active: true, leaderboardVisible: false });
     const token = randomBytes(32).toString('base64url');
-    sessions.set(token, { userId: user.id, email: user.email, displayName: user.displayName, role: user.role });
-    res.status(201).json({ token, user: { id: user.id, email: user.email, displayName: user.displayName, role: user.role } });
+    sessions.set(token, { userId: user.id, email: user.email, displayName: user.displayName, role: user.role, leaderboardVisible: user.leaderboardVisible });
+    res.status(201).json({ token, user: { id: user.id, email: user.email, displayName: user.displayName, role: user.role, leaderboardVisible: user.leaderboardVisible } });
   } catch (error) { next(error); }
 });
 app.post('/api/auth/login', async (req, res, next) => {
@@ -280,11 +332,11 @@ app.post('/api/auth/login', async (req, res, next) => {
     const user = await pb.collection('app_accounts').getFirstListItem(`email = "${email.replaceAll('"', '')}"`).catch(() => null);
     if (!user?.active || !verifyPassword(password, user.passwordHash)) return res.status(401).json({ error: 'Email or password is incorrect.' });
     const token = randomBytes(32).toString('base64url');
-    sessions.set(token, { userId: user.id, email: user.email, displayName: user.displayName, role: user.role });
-    res.json({ token, user: { id: user.id, email: user.email, displayName: user.displayName, role: user.role } });
+    sessions.set(token, { userId: user.id, email: user.email, displayName: user.displayName, role: user.role, leaderboardVisible: Boolean(user.leaderboardVisible) });
+    res.json({ token, user: { id: user.id, email: user.email, displayName: user.displayName, role: user.role, leaderboardVisible: Boolean(user.leaderboardVisible) } });
   } catch (error) { next(error); }
 });
-app.get('/api/auth/me', requireUser, (req, res) => res.json({ user: { id: req.user.userId, email: req.user.email, displayName: req.user.displayName, role: req.user.role } }));
+app.get('/api/auth/me', requireUser, (req, res) => res.json({ user: { id: req.user.userId, email: req.user.email, displayName: req.user.displayName, role: req.user.role, leaderboardVisible: Boolean(req.user.leaderboardVisible) } }));
 app.post('/api/auth/logout', requireUser, (req, res) => {
   sessions.delete(req.get('authorization')?.replace(/^Bearer\s+/i, ''));
   res.json({ ok: true });
@@ -296,6 +348,14 @@ app.get('/api/account/metrics', requireUser, async (req, res, next) => {
     const impactEvents = reportIds.length ? await pb.collection('impact_events').getFullList({ fields: 'id,report' }).catch(() => []) : [];
     const ownReportIds = new Set(reportIds);
     res.json({ metrics: { reportsSubmitted: ownReports.length, verifiedReports: ownReports.filter((report) => report.reviewStatus === 'verified').length, awaitingReview: ownReports.filter((report) => ['unverified', 'needs_review'].includes(report.reviewStatus)).length, impactEventsRecorded: impactEvents.filter((event) => ownReportIds.has(event.report)).length } });
+  } catch (error) { next(error); }
+});
+app.post('/api/account/leaderboard-visibility', requireUser, async (req, res, next) => {
+  try {
+    const visible = req.body?.visible === true;
+    await pb.collection('app_accounts').update(req.user.userId, { leaderboardVisible: visible });
+    req.user.leaderboardVisible = visible;
+    res.json({ leaderboardVisible: visible });
   } catch (error) { next(error); }
 });
 app.get('/api/account/reports', requireUser, async (req, res, next) => {
@@ -432,6 +492,7 @@ app.post('/api/reports', upload.single('photo'), requireUser, async (req, res, n
       isFiscListed: Boolean(match),
       geminiSuggestion: String(body.geminiSuggestion || '').slice(0, 500),
       observedAt: String(body.observedAt || new Date().toISOString()),
+      locationLabel: String(body.locationLabel || 'Orange County, FL').trim().slice(0, 160),
       note: String(body.note || '').slice(0, 1200),
       latitude,
       longitude,
