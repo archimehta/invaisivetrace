@@ -1,59 +1,71 @@
 # Spot the Spread — Post-MVP Planning Checklist
 
-This checklist records planning work for post-MVP features. It does not authorize implementation. Resolve product and privacy decisions before creating tickets or changing the app.
+This checklist records the agreed post-MVP direction and implementation progress for the hackathon demo. The product decisions in Stage 1 are locked; remaining items are validation tasks.
 
 See [POST_MVP_FEATURE_PLAN.md](POST_MVP_FEATURE_PLAN.md) for feature descriptions and open questions.
 
-## Stage 1: Confirm scope and decisions
+## Stage 1: Confirm scope and decisions — complete
 
-- [ ] Confirm photo limit, per-image limit, and total upload limit.
-- [ ] Decide which photo Gemini analyzes and how the user can change that selection.
-- [ ] Define public timeline events versus moderator-only notes.
-- [ ] Define reviewer roles, privilege assignment, and how credentials are represented.
-- [ ] Decide whether to support duplicate, unsuitable, rejected, or appealed reports.
-- [ ] Define inspection, treatment, and follow-up event types and required evidence.
-- [ ] Set image, report, coordinate, and audit-history retention/deletion rules.
-- [ ] Decide whether reporters need accounts and what edit/delete rights they receive.
-- [ ] Choose the intended deployment scope: local demo, private pilot, or public service.
+- [x] Hackathon demo only; no public release or hosted public service.
+- [x] One primary photo plus up to three supporting photos; maximum 5 MB per photo.
+- [x] Gemini analyzes the primary photo; supporting photos add context for reviewers.
+- [x] All report photos are public with visible reports; strip metadata before upload.
+- [x] Anonymous reporters; no reporter account system for the demo.
+- [x] New reports are immediately public as `unverified`.
+- [x] Invite-only reviewers; a moderator grants reviewer roles.
+- [x] Public activity shows reviewer role and public reason, not personal identity; no private notes.
+- [x] Statuses: `unverified`, `needs_review`, `verified`, `rejected`; rejected reports are hidden from public map/list.
+- [x] Moderator retains reports and review history until deletion.
+- [x] Impact events: `inspection`, `treatment`, `follow-up`; reviewers only, each requires date and note, photos optional.
+- [x] Count verified reports, inspections, treatments, and follow-up outcomes separately.
+- [x] Exact public coordinates require reporter opt-in; otherwise show an approximate pin.
 
 ## Stage 2: Design trust and review workflow
 
-- [ ] Map report states and allowed state transitions.
-- [ ] Specify reviewer queue filters and duplicate review behavior.
-- [ ] Design an append-only audit event with actor, time, action, before/after values, and reason.
-- [ ] Decide which audit events are shown publicly and which remain private.
-- [ ] Define second-review or dispute handling.
-- [ ] Review access rules so moderator credentials are never present in the mobile app.
+- [ ] Map allowed transitions among unverified, needs_review, verified, and rejected.
+- [ ] Design reviewer queue and duplicate-report handling.
+- [ ] Design timestamped public review activity with actor role, action, and public reason; exclude reviewer identity and private notes.
+- [ ] Define who may delete a report and how deletion affects its public history.
+- [ ] Review reviewer access design so privileged credentials are not embedded in the mobile app.
 
 ## Stage 3: Design multiple-photo reporting
 
-- [ ] Design add-from-camera/library flow with thumbnails, removal, and reordering.
-- [ ] Decide how the primary/Gemini image is selected and shown to the user.
-- [ ] Specify supported file types, resizing/compression, upload limits, and failure recovery.
-- [ ] Design one-to-many photo storage and a migration plan from the MVP single-photo field.
-- [ ] Define photo order, captions/angle labels, and access/privacy behavior.
+- [ ] Design add-from-camera/library flow for up to three supporting images, including thumbnails and removal.
+- [ ] Make the primary/Gemini image clear; Gemini analyzes the primary image.
+- [ ] Design handling for the 5 MB per-photo cap, image processing, and upload failures.
+- [ ] Design ordered one-to-many photo storage and migration from the MVP single-photo field.
+- [ ] Strip metadata from every photo and show all report photos publicly with visible reports.
 
 ## Stage 4: Design report details and activity
 
-- [ ] Sketch collapsed report card and expanded detail screen.
-- [ ] Include photo gallery, species/catalog provenance, location privacy, notes, and current status.
-- [ ] Design a chronological activity timeline for public events.
-- [ ] Separate reviewer-only notes from public activity.
+- [ ] Design the report card's inline expanded view in the scrollable list.
+- [ ] Include photo gallery, species/catalog provenance, location precision, notes, and current status.
+- [ ] Show chronological public review activity with reviewer role and public reason.
+- [ ] Hide rejected reports from the public map and list.
 - [ ] Define loading, empty, offline, deleted-photo, and permission-denied states.
 
 ## Stage 5: Define impact tracking
 
-- [ ] Design inspection, treatment, and follow-up events as distinct records.
-- [ ] Define allowed outcome values and evidence requirements.
-- [ ] Decide how before/after photos relate to report photos.
-- [ ] Define candidate metrics and how incomplete coverage/uncertainty is displayed.
-- [ ] Ensure a verified sighting is not counted as treatment or eradication.
+- [ ] Design inspection, treatment, and follow-up as distinct reviewer-created events.
+- [ ] Require a date and note for each event; allow optional event photos.
+- [ ] Define follow-up outcome labels, including recurrence/no-regrowth, as recorded observations.
+- [ ] Display separate counts for verified reports, inspections, treatments, and follow-up outcomes.
+- [ ] Ensure verified sightings are not counted as treatment, eradication, or ecological improvement.
 
 ## Stage 6: Validate with users before implementation
 
-- [ ] Review the proposed workflows with at least one community reporter.
-- [ ] Review moderator workflow with a qualified reviewer, if one is available.
-- [ ] Confirm no organization or reviewer endorsement is implied without approval.
-- [ ] Rank features by user value, feasibility, privacy impact, and maintenance cost.
-- [ ] Write acceptance criteria and a phased implementation plan after decisions are made.
+- [ ] Walk through the workflows with demo participants and reviewers, if available.
+- [ ] Keep organization participation or endorsement claims out unless a partnership is established.
+- [ ] Rank the agreed features by demo value and feasibility.
+- [ ] Turn the acceptance scenarios in the feature plan into a phased implementation checklist.
 
+## Implementation status
+
+- [x] Implement multi-photo reporting while keeping existing single-photo reports readable.
+- [x] Implement inline report details and public activity history.
+- [x] Implement reviewer sign-in/invitations and status workflow, including rejected-report visibility rules.
+- [x] Implement reviewer-created impact events and separate impact counts.
+- [ ] Run through the demo acceptance scenarios with PocketBase running.
+- [ ] Validate the flows on the judge-facing device(s).
+
+TypeScript, backend syntax, and whitespace checks pass. PocketBase integration and on-device behavior still need validation.
