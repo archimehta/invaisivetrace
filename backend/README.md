@@ -10,7 +10,7 @@ Download the current PocketBase executable from [pocketbase.io](https://pocketba
 ./pocketbase serve --http=0.0.0.0:8090
 ```
 
-Open `http://127.0.0.1:8090/_/`, create a local superuser, and keep the dashboard open for moderation. The API creates locked `species` and `reports` collections on first start. Do not expose PocketBase's port publicly.
+Open `http://127.0.0.1:8090/_/` and create a local superuser. The API creates locked `species`, `reports`, photo, review, activity, and impact collections on first start. Do not expose PocketBase's port publicly.
 
 ## 2. Configure and start the API
 
@@ -20,7 +20,7 @@ npm install
 cp .env.example .env
 ```
 
-Set `PB_SUPERUSER_EMAIL` and `PB_SUPERUSER_PASSWORD` in `backend/.env`. Add `GEMINI_API_KEY` to enable photo identification; leave it blank to use manual search/name entry. `GEMINI_MODEL` can override the default model. Then run:
+Set `PB_SUPERUSER_EMAIL` and `PB_SUPERUSER_PASSWORD` in `backend/.env`. Set `DEMO_MODERATOR_EMAIL` and `DEMO_MODERATOR_PASSWORD` for the moderator sign-in in the app. If the password is blank on first setup, the API generates one and prints it once in the API terminal; save it. Moderators can issue invite-only reviewer logins from the app's Review tab. Add `GEMINI_API_KEY` to enable photo identification; leave it blank to use manual search/name entry. `GEMINI_MODEL` can override the default model. Then run:
 
 ```sh
 npm start
@@ -33,12 +33,19 @@ The API listens on port 8787. Check `http://127.0.0.1:8787/api/health`. Find the
 - `GET /api/health` — readiness, catalog count, Gemini availability.
 - `GET /api/species?search=...` — FISC species search.
 - `GET /api/reports` — public-safe report projection (no raw precise coordinates when consent is off).
+- `POST /api/reports` — create a report with one primary photo.
+- `POST /api/reports/:id/photos` — add up to three supporting photos.
 - `POST /api/identify` — multipart `photo`; asks Gemini for tentative JSON identification.
-- `POST /api/reports` — multipart photo, confirmed plant name, location, optional note, exact-location consent.
-- `GET /api/files/:id/:filename` — image proxy for saved report photos.
+- `POST /api/moderation/login` — reviewer sign-in; invitation required.
+- `POST /api/moderation/invitations` — moderator-only reviewer invitation (returns a temporary password once).
+- `GET /api/moderation/reports` — reviewer queue including rejected reports.
+- `POST /api/reports/:id/review` — reviewer status and identification updates with a public reason.
+- `POST /api/reports/:id/impact-events` — reviewer inspection, treatment, or follow-up event.
+- `DELETE /api/reports/:id` — moderator-only permanent deletion.
+- `/api/files`, `/api/photo-files`, `/api/impact-files` — image proxies; rejected report images are hidden.
 
-New reports are created with status `unverified`. Review/edit them in PocketBase at `http://127.0.0.1:8090/_/`. The local Node service must remain running for report submissions and map sync.
+New reports appear immediately with status `unverified`. Photos are limited to 5 MB each, converted to JPEG with metadata removed, and limited to four per report. Tapping a community card expands its details and public activity. Reviewers can change status, correct the identification, and record impact events; counts keep verified reports separate from inspections, treatments, and follow-ups. Rejected reports are hidden from the public map and list, but retained in the reviewer queue until moderator deletion. The local Node service must remain running for reports, review, and map sync.
 
 ## Local demo security
 
-This prototype is for a private hackathon LAN. The API accepts anonymous reports and has permissive CORS for Expo Go; it does not include abuse prevention or public deployment protections. Use a dedicated local PocketBase superuser, never commit `.env`, and keep the service off untrusted/public networks.
+This prototype is for a private hackathon LAN. The API accepts anonymous reports and has permissive CORS for Expo Go; it does not include abuse prevention or public deployment protections. Reviewer sessions are held in API memory and expire when the server restarts. Use a dedicated local PocketBase superuser, never commit `.env`, and keep the service off untrusted/public networks.

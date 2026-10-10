@@ -2,6 +2,8 @@ import cors from 'cors';
 import express from 'express';
 import multer from 'multer';
 import PocketBase from 'pocketbase';
+import sharp from 'sharp';
+import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,7 +16,9 @@ const PB_EMAIL = process.env.PB_SUPERUSER_EMAIL;
 const PB_PASSWORD = process.env.PB_SUPERUSER_PASSWORD;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
 const mapDecimals = Math.min(5, Math.max(1, Number(process.env.PUBLIC_MAP_DECIMALS || 3)));
-const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_REPORT_PHOTOS = 4;
+const sessions = new Map();
 
 if (!PB_EMAIL || !PB_PASSWORD) {
   console.error('Set PB_SUPERUSER_EMAIL and PB_SUPERUSER_PASSWORD in backend/.env.');
@@ -70,6 +74,38 @@ async function setupDatabase() {
     { name: 'photo', type: 'file', required: true, maxSelect: 1, maxSize: MAX_IMAGE_BYTES, mimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/heic'] },
   ], ['CREATE INDEX idx_reports_status ON reports (reviewStatus)']);
 
+  const reportsCollection = await pb.collections.getOne('reports');
+  await ensureCollection('report_photos', [
+    { name: 'report', type: 'relation', collectionId: reportsCollection.id, cascadeDelete: true, maxSelect: 1, required: true },
+    number('position', true), bool('isPrimary'),
+    { name: 'image', type: 'file', required: true, maxSelect: 1, maxSize: MAX_IMAGE_BYTES, mimeTypes: ['image/jpeg'] },
+  ], ['CREATE INDEX idx_report_photos_report ON report_photos (report)']);
+  await ensureCollection('report_activity', [
+    { name: 'report', type: 'relation', collectionId: reportsCollection.id, cascadeDelete: true, maxSelect: 1, required: true },
+    text('eventType', true, 40), text('actorRole', true, 40), text('publicReason', false, 500),
+    text('fromStatus', false, 32), text('toStatus', false, 32), text('occurredAt', true, 40),
+  ], ['CREATE INDEX idx_report_activity_report ON report_activity (report)']);
+  await ensureCollection('impact_events', [
+    { name: 'report', type: 'relation', collectionId: reportsCollection.id, cascadeDelete: true, maxSelect: 1, required: true },
+    text('eventType', true, 40), text('eventDate', true, 40), text('note', true, 1200),
+    { name: 'photos', type: 'file', required: false, maxSelect: 3, maxSize: MAX_IMAGE_BYTES, mimeTypes: ['image/jpeg'] },
+    text('actorRole', true, 40),
+  ], ['CREATE INDEX idx_impact_events_report ON impact_events (report)']);
+  await ensureCollection('reviewers', [
+    text('email', true, 240), text('passwordHash', true, 200), text('role', true, 32), bool('active'),
+  ], ['CREATE UNIQUE INDEX idx_reviewers_email ON reviewers (email)']);
+
+  const reviewers = await pb.collection('reviewers').getFullList({ fields: 'id,email,role' });
+  if (!reviewers.some((reviewer) => reviewer.role === 'moderator')) {
+    const email = (process.env.DEMO_MODERATOR_EMAIL || 'moderator@spot-the-spread.local').toLowerCase();
+    const password = process.env.DEMO_MODERATOR_PASSWORD || randomBytes(9).toString('base64url');
+    const passwordHash = hashPassword(password);
+    const existingModerator = reviewers.find((reviewer) => reviewer.email === email);
+    if (existingModerator) await pb.collection('reviewers').update(existingModerator.id, { role: 'moderator', passwordHash, active: true });
+    else await pb.collection('reviewers').create({ email, role: 'moderator', passwordHash, active: true });
+    if (!process.env.DEMO_MODERATOR_PASSWORD) console.log(`Demo moderator login: ${email} / ${password} (save this password; it is shown only at first setup)`);
+  }
+
   const existing = await pb.collection('species').getFullList({ fields: 'id,slug,sourceVersion,sourceRetrievedAt' });
   const ids = new Map(existing.map((record) => [record.slug, record]));
   for (const species of catalog) {
@@ -92,6 +128,18 @@ async function setupDatabase() {
       await pb.collection('species').update(current.id, record);
     }
   }
+  const oldReports = await pb.collection('reports').getFullList({ fields: 'id,observedAt,reviewStatus' });
+  for (const report of oldReports) {
+    const hasActivity = await pb.collection('report_activity').getFirstListItem(`report = "${report.id}"`).then(() => true).catch(() => false);
+    if (!hasActivity) await pb.collection('report_activity').create({
+      report: report.id,
+      eventType: 'history_started',
+      actorRole: 'System',
+      publicReason: 'Activity history enabled for this existing demo report.',
+      toStatus: report.reviewStatus || 'unverified',
+      occurredAt: report.observedAt || new Date().toISOString(),
+    });
+  }
   console.log(`PocketBase ready: ${catalog.length} FISC plants loaded.`);
 }
 
@@ -103,12 +151,19 @@ const findSpecies = (value) => {
   return catalog.find((species) => speciesNames(species).some((candidate) => normalize(candidate) === wanted)) || null;
 };
 const roundCoordinate = (value) => Number(Number(value).toFixed(mapDecimals));
-const projectReport = (record, publicOrigin = `http://localhost:${PORT}`) => ({
+const fileUrl = (record, filename, publicOrigin, route = 'api/files') => `${publicOrigin}/${route}/${record.id}/${encodeURIComponent(filename)}`;
+async function projectReport(record, publicOrigin = `http://localhost:${PORT}`) {
+  const linkedPhotos = await pb.collection('report_photos').getFullList({ filter: `report = "${record.id}"`, sort: 'position' }).catch(() => []);
+  const activity = await pb.collection('report_activity').getFullList({ filter: `report = "${record.id}"`, sort: 'occurredAt' }).catch(() => []);
+  const impactEvents = await pb.collection('impact_events').getFullList({ filter: `report = "${record.id}"`, sort: '-eventDate' }).catch(() => []);
+  const primary = record.photo ? [{ id: `${record.id}-primary`, url: fileUrl(record, record.photo, publicOrigin), isPrimary: true, position: 0 }] : [];
+  return {
   id: record.id,
   speciesName: record.speciesName,
   scientificName: record.scientificName,
   isFiscListed: record.isFiscListed,
   listedCategory: record.listedCategory,
+  sourceUrl: findSpecies(record.speciesId)?.sourceUrl || null,
   geminiSuggestion: record.geminiSuggestion,
   observedAt: record.observedAt,
   note: record.note,
@@ -116,9 +171,55 @@ const projectReport = (record, publicOrigin = `http://localhost:${PORT}`) => ({
   longitude: record.publicLongitude,
   exactLocationPublic: record.exactLocationPublic,
   reviewStatus: record.reviewStatus,
-  photoUrl: record.photo ? `${publicOrigin}/api/files/${record.id}/${encodeURIComponent(record.photo)}` : null,
+  photos: [...primary, ...linkedPhotos.map((photo) => ({ id: photo.id, url: fileUrl(photo, photo.image, publicOrigin, 'api/photo-files'), isPrimary: Boolean(photo.isPrimary), position: photo.position }))].sort((a, b) => a.position - b.position),
+  photoUrl: record.photo ? fileUrl(record, record.photo, publicOrigin) : null,
+  activity: activity.map((item) => ({ id: item.id, type: item.eventType, actorRole: item.actorRole, publicReason: item.publicReason, fromStatus: item.fromStatus, toStatus: item.toStatus, occurredAt: item.occurredAt })),
+  impactEvents: impactEvents.map((item) => ({ id: item.id, type: item.eventType, date: item.eventDate, note: item.note, actorRole: item.actorRole, photos: (item.photos || []).map((filename) => fileUrl(item, filename, publicOrigin, 'api/impact-files')) })),
   created: record.created || record.observedAt,
-});
+  };
+}
+
+function hashPassword(password) {
+  const salt = randomBytes(16).toString('hex');
+  return `${salt}:${scryptSync(password, salt, 64).toString('hex')}`;
+}
+function verifyPassword(password, stored) {
+  const [salt, hash] = String(stored || '').split(':');
+  if (!salt || !hash) return false;
+  const actual = scryptSync(password, salt, 64);
+  const expected = Buffer.from(hash, 'hex');
+  return actual.length === expected.length && timingSafeEqual(actual, expected);
+}
+function requireReviewer(req, res, next) {
+  const token = req.get('authorization')?.replace(/^Bearer\s+/i, '');
+  const session = token && sessions.get(token);
+  if (!session) return res.status(401).json({ error: 'Sign in with an invited reviewer account to continue.' });
+  req.reviewer = session;
+  next();
+}
+function requireModerator(req, res, next) {
+  requireReviewer(req, res, (error) => {
+    if (error) return next(error);
+    if (req.reviewer.role !== 'moderator') return res.status(403).json({ error: 'Moderator access is required.' });
+    next();
+  });
+}
+async function normalizeImage(file) {
+  if (!file) throw Object.assign(new Error('Choose an image first.'), { status: 400 });
+  if (file.size > MAX_IMAGE_BYTES) throw Object.assign(new Error('Each photo must be 5 MB or smaller.'), { status: 413 });
+  let buffer;
+  try {
+    buffer = await sharp(file.buffer, { failOn: 'error' }).rotate().resize({ width: 2048, height: 2048, fit: 'inside', withoutEnlargement: true }).jpeg({ quality: 84, mozjpeg: true }).toBuffer();
+  } catch {
+    throw Object.assign(new Error('Could not process this image. Choose a JPEG, PNG, or supported phone photo.'), { status: 400 });
+  }
+  if (buffer.length > MAX_IMAGE_BYTES) throw Object.assign(new Error('This image is still larger than 5 MB after processing. Choose a smaller photo.'), { status: 413 });
+  return buffer;
+}
+
+async function addActivity(reportId, event) {
+  return pb.collection('report_activity').create({ report: reportId, occurredAt: new Date().toISOString(), ...event });
+}
 
 app.get('/api/health', (_req, res) => res.json({ ok: true, catalogCount: catalog.length, geminiEnabled: Boolean(process.env.GEMINI_API_KEY) }));
 app.get('/api/species', (req, res) => {
@@ -132,34 +233,86 @@ app.get('/api/reports', async (_req, res, next) => {
   try {
     // PocketBase 0.40 collections in this project store the observation time
     // explicitly; they don't expose the legacy built-in `created` timestamp.
-    const records = await pb.collection('reports').getFullList({ sort: '-observedAt' });
+    const records = await pb.collection('reports').getFullList({ filter: 'reviewStatus != "rejected"', sort: '-observedAt' });
     const publicOrigin = `http://${_req.get('host')}`;
-    res.json({ reports: records.map((record) => projectReport(record, publicOrigin)) });
+    res.json({ reports: await Promise.all(records.map((record) => projectReport(record, publicOrigin))) });
   } catch (error) { next(error); }
 });
-app.get('/api/files/:id/:filename', async (req, res) => {
+async function proxyFile(collection, id, filename, req, res) {
   try {
+    let reportId = id;
+    if (collection === 'report_photos' || collection === 'impact_events') {
+      const related = await pb.collection(collection).getOne(id);
+      reportId = related.report;
+    }
+    const parentReport = await pb.collection('reports').getOne(reportId);
+    if (parentReport.reviewStatus === 'rejected') {
+      const accessToken = req.get('authorization')?.replace(/^Bearer\s+/i, '');
+      if (!accessToken || !sessions.has(accessToken)) return res.status(404).end();
+    }
     const token = await pb.files.getToken();
-    const url = `${PB_URL}/api/files/reports/${encodeURIComponent(req.params.id)}/${encodeURIComponent(req.params.filename)}?token=${encodeURIComponent(token)}`;
+    const url = `${PB_URL}/api/files/${collection}/${encodeURIComponent(id)}/${encodeURIComponent(filename)}?token=${encodeURIComponent(token)}`;
     const response = await fetch(url);
     if (!response.ok) return res.status(response.status).end();
     res.setHeader('Content-Type', response.headers.get('content-type') || 'application/octet-stream');
     res.setHeader('Cache-Control', 'public, max-age=300');
     res.send(Buffer.from(await response.arrayBuffer()));
   } catch { res.status(502).end(); }
+}
+app.get('/api/files/:id/:filename', (req, res) => proxyFile('reports', req.params.id, req.params.filename, req, res));
+app.get('/api/photo-files/:id/:filename', (req, res) => proxyFile('report_photos', req.params.id, req.params.filename, req, res));
+app.get('/api/impact-files/:id/:filename', (req, res) => proxyFile('impact_events', req.params.id, req.params.filename, req, res));
+
+app.post('/api/moderation/login', async (req, res, next) => {
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    const password = String(req.body?.password || '');
+    const reviewer = await pb.collection('reviewers').getFirstListItem(`email = "${email.replaceAll('"', '')}"`).catch(() => null);
+    if (!reviewer?.active || !verifyPassword(password, reviewer.passwordHash)) return res.status(401).json({ error: 'Email or password is incorrect.' });
+    const token = randomBytes(32).toString('base64url');
+    sessions.set(token, { reviewerId: reviewer.id, role: reviewer.role });
+    res.json({ token, role: reviewer.role });
+  } catch (error) { next(error); }
+});
+
+app.post('/api/moderation/logout', requireReviewer, (req, res) => {
+  const token = req.get('authorization')?.replace(/^Bearer\s+/i, '');
+  sessions.delete(token);
+  res.json({ ok: true });
+});
+
+app.post('/api/moderation/invitations', requireModerator, async (req, res, next) => {
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    if (!/^\S+@\S+\.\S+$/.test(email)) return res.status(400).json({ error: 'Enter a valid email address.' });
+    const duplicate = await pb.collection('reviewers').getFirstListItem(`email = "${email.replaceAll('"', '')}"`).catch(() => null);
+    if (duplicate) return res.status(409).json({ error: 'A reviewer account already exists for that email.' });
+    const temporaryPassword = randomBytes(12).toString('base64url');
+    await pb.collection('reviewers').create({ email, passwordHash: hashPassword(temporaryPassword), role: 'reviewer', active: true });
+    res.status(201).json({ email, role: 'reviewer', temporaryPassword, message: 'Share this temporary password with the invited reviewer.' });
+  } catch (error) { next(error); }
+});
+
+app.get('/api/moderation/reports', requireReviewer, async (_req, res, next) => {
+  try {
+    const records = await pb.collection('reports').getFullList({ sort: '-observedAt' });
+    const publicOrigin = `http://${_req.get('host')}`;
+    res.json({ reports: await Promise.all(records.map((record) => projectReport(record, publicOrigin))) });
+  } catch (error) { next(error); }
 });
 
 app.post('/api/identify', upload.single('photo'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Choose a plant photo first.' });
   if (!process.env.GEMINI_API_KEY) return res.status(503).json({ error: 'Gemini is not configured. Search the FISC list or enter a plant name manually.' });
   try {
+    const image = await normalizeImage(req.file);
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': process.env.GEMINI_API_KEY },
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [
           { text: 'Identify the visible plant from this image. Do not infer invasive status. Return a tentative best common name, scientific name if reasonably known, up to 3 plausible alternative names, confidence as low/medium/high, and a short visual rationale. If the image is not a plant or identification is uncertain, say so. Respond only as JSON with keys isPlant (boolean), commonName (string), scientificName (string), alternatives (array of strings), confidence (string), rationale (string).' },
-          { inline_data: { mime_type: req.file.mimetype, data: req.file.buffer.toString('base64') } },
+          { inline_data: { mime_type: 'image/jpeg', data: image.toString('base64') } },
         ] }],
         generationConfig: { responseMimeType: 'application/json' },
       }),
@@ -189,6 +342,7 @@ app.post('/api/reports', upload.single('photo'), async (req, res, next) => {
     }
     const match = findSpecies(speciesName) || findSpecies(body.scientificName);
     const exactLocationPublic = body.exactLocationPublic === 'true';
+    const image = await normalizeImage(req.file);
     const report = new FormData();
     const fields = {
       speciesName,
@@ -208,9 +362,88 @@ app.post('/api/reports', upload.single('photo'), async (req, res, next) => {
       reviewNote: '',
     };
     for (const [key, value] of Object.entries(fields)) report.append(key, String(value));
-    report.append('photo', new Blob([req.file.buffer], { type: req.file.mimetype }), req.file.originalname || 'plant.jpg');
+    report.append('photo', new Blob([image], { type: 'image/jpeg' }), 'plant.jpg');
     const created = await pb.collection('reports').create(report);
-    res.status(201).json({ report: projectReport(created, `http://${req.get('host')}`) });
+    await addActivity(created.id, { eventType: 'submitted', actorRole: 'Reporter', publicReason: 'Community report submitted.', toStatus: 'unverified' });
+    res.status(201).json({ report: await projectReport(created, `http://${req.get('host')}`) });
+  } catch (error) { next(error); }
+});
+
+app.post('/api/reports/:id/photos', upload.single('photo'), async (req, res, next) => {
+  try {
+    const report = await pb.collection('reports').getOne(req.params.id);
+    if (report.reviewStatus === 'rejected') return res.status(404).json({ error: 'This report is not available.' });
+    const existing = await pb.collection('report_photos').getFullList({ filter: `report = "${report.id}"` });
+    const count = (report.photo ? 1 : 0) + existing.length;
+    if (count >= MAX_REPORT_PHOTOS) return res.status(400).json({ error: `A report can include up to ${MAX_REPORT_PHOTOS} photos.` });
+    const image = await normalizeImage(req.file);
+    const saved = await pb.collection('report_photos').create({
+      report: report.id,
+      position: count,
+      isPrimary: false,
+      image: new File([image], 'supporting-photo.jpg', { type: 'image/jpeg' }),
+    });
+    res.status(201).json({ photo: { id: saved.id, url: fileUrl(saved, saved.image, `http://${req.get('host')}`, 'api/photo-files'), isPrimary: false, position: saved.position } });
+  } catch (error) { next(error); }
+});
+
+const allowedStatuses = new Set(['unverified', 'needs_review', 'verified', 'rejected']);
+const allowedTransitions = {
+  unverified: new Set(['needs_review', 'verified', 'rejected']),
+  needs_review: new Set(['verified', 'rejected', 'unverified']),
+  verified: new Set(['needs_review', 'rejected']),
+  rejected: new Set(['needs_review']),
+};
+app.post('/api/reports/:id/review', requireReviewer, async (req, res, next) => {
+  try {
+    const report = await pb.collection('reports').getOne(req.params.id);
+    const status = String(req.body?.status || '');
+    const reason = String(req.body?.reason || '').trim().slice(0, 500);
+    if (!allowedStatuses.has(status)) return res.status(400).json({ error: 'Choose a supported review status.' });
+    const speciesName = String(req.body?.speciesName || '').trim();
+    if (status === report.reviewStatus && !speciesName) return res.status(400).json({ error: 'Choose a status change or provide a corrected identification.' });
+    if (status !== report.reviewStatus && !allowedTransitions[report.reviewStatus]?.has(status)) return res.status(409).json({ error: `Cannot move a ${report.reviewStatus} report to ${status}.` });
+    if (!reason) return res.status(400).json({ error: 'Add a public reason for this review action.' });
+    const fields = { reviewStatus: status };
+    const scientificName = String(req.body?.scientificName || '').trim();
+    if (speciesName) {
+      const match = findSpecies(speciesName) || findSpecies(scientificName);
+      fields.speciesName = speciesName.slice(0, 240);
+      fields.scientificName = (scientificName || match?.scientificName || '').slice(0, 240);
+      fields.speciesId = match?.id || '';
+      fields.listedCategory = match?.category || '';
+      fields.isFiscListed = Boolean(match);
+    }
+    const updated = await pb.collection('reports').update(report.id, fields);
+    await addActivity(report.id, { eventType: 'review_status_changed', actorRole: req.reviewer.role, publicReason: reason, fromStatus: report.reviewStatus, toStatus: status });
+    if (speciesName && speciesName !== report.speciesName) await addActivity(report.id, { eventType: 'identification_corrected', actorRole: req.reviewer.role, publicReason: `Identification updated to ${speciesName}.`, fromStatus: status, toStatus: status });
+    const projected = await projectReport(updated, `http://${req.get('host')}`);
+    res.json({ report: projected });
+  } catch (error) { next(error); }
+});
+
+app.post('/api/reports/:id/impact-events', upload.single('photo'), requireReviewer, async (req, res, next) => {
+  try {
+    const report = await pb.collection('reports').getOne(req.params.id);
+    if (report.reviewStatus === 'rejected') return res.status(409).json({ error: 'Impact events cannot be added to a rejected report.' });
+    const eventType = String(req.body?.type || '');
+    const eventDate = String(req.body?.date || '').trim();
+    const note = String(req.body?.note || '').trim();
+    if (!['inspection', 'treatment', 'follow-up'].includes(eventType)) return res.status(400).json({ error: 'Choose inspection, treatment, or follow-up.' });
+    if (!eventDate || Number.isNaN(Date.parse(eventDate))) return res.status(400).json({ error: 'Enter a valid event date.' });
+    if (!note) return res.status(400).json({ error: 'Add a note describing the recorded event.' });
+    const fields = { report: report.id, eventType, eventDate, note: note.slice(0, 1200), actorRole: req.reviewer.role };
+    if (req.file) fields.photos = new File([await normalizeImage(req.file)], 'event-photo.jpg', { type: 'image/jpeg' });
+    const event = await pb.collection('impact_events').create(fields);
+    await addActivity(report.id, { eventType: 'impact_event_added', actorRole: req.reviewer.role, publicReason: `${eventType} recorded for ${eventDate}.` });
+    res.status(201).json({ event: { id: event.id, type: event.eventType, date: event.eventDate, note: event.note, actorRole: event.actorRole, photos: (event.photos || []).map((filename) => fileUrl(event, filename, `http://${req.get('host')}`, 'api/impact-files')) } });
+  } catch (error) { next(error); }
+});
+
+app.delete('/api/reports/:id', requireModerator, async (req, res, next) => {
+  try {
+    await pb.collection('reports').delete(req.params.id);
+    res.status(204).end();
   } catch (error) { next(error); }
 });
 

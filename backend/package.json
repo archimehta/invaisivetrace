@@ -2,11 +2,14 @@
   "name": "spot-the-spread-api",
   "private": true,
   "type": "module",
-  "scripts": { "start": "node --env-file=.env server.mjs" },
+  "scripts": {
+    "start": "node --env-file=.env server.mjs"
+  },
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "multer": "^2.0.2",
-    "pocketbase": "^0.26.0"
+    "pocketbase": "^0.26.0",
+    "sharp": "^0.35.5"
   }
 }
