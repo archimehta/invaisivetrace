@@ -6,7 +6,7 @@ This document records the agreed direction for improving the hackathon demo afte
 
 ## Implementation status
 
-The first implementation pass is now in the codebase: multi-photo reports, reviewer sign-in and invitations, public activity history, report status review, impact events, inline report details, and separate community activity counts. TypeScript and backend syntax checks pass. A full PocketBase-backed and on-device run remains to be verified when the local PocketBase and Expo environments are available.
+The account model now uses regular member registration and one environment-configured moderator. Reports are linked privately to the submitting member; a moderator-only dashboard exposes community totals and contribution counts. Existing reports remain anonymous. Review workflows continue through moderator-only API routes.
 
 The current MVP remains the baseline: Expo React Native, the existing backend and PocketBase catalog, Gemini-assisted tentative identification, and the community report map. Future work should preserve the distinction between a user-submitted identification and a verified report, and between a verified sighting and evidence of ecological impact.
 
@@ -25,7 +25,7 @@ The MVP currently stores one photo per report. Future implementation will need a
 ### Trust, review, and public activity
 
 - New reports appear immediately with `unverified` status.
-- Reviewers are invite-only. A moderator grants reviewer roles.
+- Public sign-up always creates a regular member; the moderator role comes only from backend environment configuration.
 - Public report activity is visible to users. Attribute actions to a role and public reason (for example, “Moderator”), not to a reviewer's personal identity. Do not add private reviewer notes in this demo workflow.
 - Review states include `unverified`, `needs_review`, `verified`, and `rejected`.
 - Rejected reports are hidden from the public map and list. Their report and review history remain available to moderators unless a moderator deletes them.

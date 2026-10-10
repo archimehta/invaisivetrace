@@ -39,11 +39,12 @@ const json = (name) => ({ name, type: 'json' });
 const bool = (name) => ({ name, type: 'bool' });
 
 async function ensureCollection(name, fields, indexes = []) {
+  let collection;
   try {
-    await pb.collections.getOne(name);
+    collection = await pb.collections.getOne(name);
   } catch (error) {
     if (error?.status !== 404) throw error;
-    await pb.collections.create({
+    collection = await pb.collections.create({
       name,
       type: 'base',
       listRule: null,
@@ -55,6 +56,9 @@ async function ensureCollection(name, fields, indexes = []) {
       indexes,
     });
   }
+  const existingNames = new Set((collection.fields || []).map((field) => field.name));
+  const missingFields = fields.filter((field) => !existingNames.has(field.name));
+  if (missingFields.length) await pb.collections.update(collection.id, { fields: [...collection.fields, ...missingFields] });
 }
 
 async function setupDatabase() {
@@ -71,6 +75,7 @@ async function setupDatabase() {
     text('observedAt', true, 40), text('note', false, 1200),
     number('latitude', true), number('longitude', true), number('publicLatitude', true), number('publicLongitude', true),
     bool('exactLocationPublic'), text('reviewStatus', true, 32), text('reviewNote', false, 1200),
+    text('reporterId', false, 64), text('reporterName', false, 160),
     { name: 'photo', type: 'file', required: true, maxSelect: 1, maxSize: MAX_IMAGE_BYTES, mimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/heic'] },
   ], ['CREATE INDEX idx_reports_status ON reports (reviewStatus)']);
 
@@ -91,19 +96,41 @@ async function setupDatabase() {
     { name: 'photos', type: 'file', required: false, maxSelect: 3, maxSize: MAX_IMAGE_BYTES, mimeTypes: ['image/jpeg'] },
     text('actorRole', true, 40),
   ], ['CREATE INDEX idx_impact_events_report ON impact_events (report)']);
-  await ensureCollection('reviewers', [
-    text('email', true, 240), text('passwordHash', true, 200), text('role', true, 32), bool('active'),
-  ], ['CREATE UNIQUE INDEX idx_reviewers_email ON reviewers (email)']);
+  // `users` may be a PocketBase auth collection and requires PocketBase passwords.
+  // App credentials are custom scrypt hashes, so keep them in a separate base collection.
+  await ensureCollection('app_accounts', [
+    text('email', true, 240), text('displayName', true, 120), text('passwordHash', true, 200), text('role', true, 32), bool('active'),
+  ], ['CREATE UNIQUE INDEX idx_app_accounts_email ON app_accounts (email)']);
 
-  const reviewers = await pb.collection('reviewers').getFullList({ fields: 'id,email,role' });
-  if (!reviewers.some((reviewer) => reviewer.role === 'moderator')) {
-    const email = (process.env.DEMO_MODERATOR_EMAIL || 'moderator@spot-the-spread.local').toLowerCase();
-    const password = process.env.DEMO_MODERATOR_PASSWORD || randomBytes(9).toString('base64url');
-    const passwordHash = hashPassword(password);
-    const existingModerator = reviewers.find((reviewer) => reviewer.email === email);
-    if (existingModerator) await pb.collection('reviewers').update(existingModerator.id, { role: 'moderator', passwordHash, active: true });
-    else await pb.collection('reviewers').create({ email, role: 'moderator', passwordHash, active: true });
-    if (!process.env.DEMO_MODERATOR_PASSWORD) console.log(`Demo moderator login: ${email} / ${password} (save this password; it is shown only at first setup)`);
+  const email = (process.env.DEMO_MODERATOR_EMAIL || 'moderator@spot-the-spread.local').trim().toLowerCase();
+  const password = process.env.DEMO_MODERATOR_PASSWORD;
+  const existingEmails = new Set((await pb.collection('app_accounts').getFullList({ fields: 'email' })).map((item) => item.email));
+  const legacyReviewers = await pb.collection('reviewers').getFullList().catch(() => []);
+  for (const legacy of legacyReviewers) {
+    const legacyEmail = String(legacy.email || '').trim().toLowerCase();
+    if (!legacyEmail || existingEmails.has(legacyEmail)) continue;
+    await pb.collection('app_accounts').create({
+      email: legacyEmail,
+      displayName: legacy.role === 'moderator' ? 'Community Moderator' : legacyEmail.split('@')[0],
+      passwordHash: legacy.passwordHash,
+      role: legacyEmail === email ? 'moderator' : 'user',
+      active: Boolean(legacy.active),
+    });
+    existingEmails.add(legacyEmail);
+  }
+  const existingUsers = await pb.collection('app_accounts').getFullList({ fields: 'id,email,role,displayName' });
+  for (const user of existingUsers.filter((item) => item.role === 'moderator' && item.email !== email)) {
+    await pb.collection('app_accounts').update(user.id, { role: 'user' });
+  }
+  const existingModerator = existingUsers.find((item) => item.email === email);
+  if (existingModerator) {
+    const changes = { role: 'moderator', active: true, displayName: existingModerator.displayName || 'Community Moderator' };
+    if (password) changes.passwordHash = hashPassword(password);
+    await pb.collection('app_accounts').update(existingModerator.id, changes);
+  } else {
+    const generatedPassword = password || randomBytes(9).toString('base64url');
+    await pb.collection('app_accounts').create({ email, displayName: 'Community Moderator', role: 'moderator', passwordHash: hashPassword(generatedPassword), active: true });
+    if (!password) console.log(`Demo moderator login: ${email} / ${generatedPassword} (save this password; it is shown only at first setup)`);
   }
 
   const existing = await pb.collection('species').getFullList({ fields: 'id,slug,sourceVersion,sourceRetrievedAt' });
@@ -152,7 +179,7 @@ const findSpecies = (value) => {
 };
 const roundCoordinate = (value) => Number(Number(value).toFixed(mapDecimals));
 const fileUrl = (record, filename, publicOrigin, route = 'api/files') => `${publicOrigin}/${route}/${record.id}/${encodeURIComponent(filename)}`;
-async function projectReport(record, publicOrigin = `http://localhost:${PORT}`) {
+async function projectReport(record, publicOrigin = `http://localhost:${PORT}`, { includePrivateLocation = false, includeReporter = false } = {}) {
   const linkedPhotos = await pb.collection('report_photos').getFullList({ filter: `report = "${record.id}"`, sort: 'position' }).catch(() => []);
   const activity = await pb.collection('report_activity').getFullList({ filter: `report = "${record.id}"`, sort: 'occurredAt' }).catch(() => []);
   const impactEvents = await pb.collection('impact_events').getFullList({ filter: `report = "${record.id}"`, sort: '-eventDate' }).catch(() => []);
@@ -167,8 +194,8 @@ async function projectReport(record, publicOrigin = `http://localhost:${PORT}`) 
   geminiSuggestion: record.geminiSuggestion,
   observedAt: record.observedAt,
   note: record.note,
-  latitude: record.publicLatitude,
-  longitude: record.publicLongitude,
+  latitude: includePrivateLocation ? record.latitude : record.publicLatitude,
+  longitude: includePrivateLocation ? record.longitude : record.publicLongitude,
   exactLocationPublic: record.exactLocationPublic,
   reviewStatus: record.reviewStatus,
   photos: [...primary, ...linkedPhotos.map((photo) => ({ id: photo.id, url: fileUrl(photo, photo.image, publicOrigin, 'api/photo-files'), isPrimary: Boolean(photo.isPrimary), position: photo.position }))].sort((a, b) => a.position - b.position),
@@ -176,6 +203,7 @@ async function projectReport(record, publicOrigin = `http://localhost:${PORT}`) 
   activity: activity.map((item) => ({ id: item.id, type: item.eventType, actorRole: item.actorRole, publicReason: item.publicReason, fromStatus: item.fromStatus, toStatus: item.toStatus, occurredAt: item.occurredAt })),
   impactEvents: impactEvents.map((item) => ({ id: item.id, type: item.eventType, date: item.eventDate, note: item.note, actorRole: item.actorRole, photos: (item.photos || []).map((filename) => fileUrl(item, filename, publicOrigin, 'api/impact-files')) })),
   created: record.created || record.observedAt,
+  ...(includeReporter ? { reporter: { id: record.reporterId || null, displayName: record.reporterName || 'Community member' } } : {}),
   };
 }
 
@@ -193,8 +221,15 @@ function verifyPassword(password, stored) {
 function requireReviewer(req, res, next) {
   const token = req.get('authorization')?.replace(/^Bearer\s+/i, '');
   const session = token && sessions.get(token);
-  if (!session) return res.status(401).json({ error: 'Sign in with an invited reviewer account to continue.' });
+  if (!session || !['moderator', 'reviewer'].includes(session.role)) return res.status(401).json({ error: 'Sign in with a moderator account to continue.' });
   req.reviewer = session;
+  next();
+}
+function requireUser(req, res, next) {
+  const token = req.get('authorization')?.replace(/^Bearer\s+/i, '');
+  const session = token && sessions.get(token);
+  if (!session) return res.status(401).json({ error: 'Sign in to submit and track your sightings.' });
+  req.user = session;
   next();
 }
 function requireModerator(req, res, next) {
@@ -221,7 +256,75 @@ async function addActivity(reportId, event) {
   return pb.collection('report_activity').create({ report: reportId, occurredAt: new Date().toISOString(), ...event });
 }
 
-app.get('/api/health', (_req, res) => res.json({ ok: true, catalogCount: catalog.length, geminiEnabled: Boolean(process.env.GEMINI_API_KEY) }));
+app.get('/api/health', (_req, res) => res.json({ ok: true, accountSystem: true, catalogCount: catalog.length, geminiEnabled: Boolean(process.env.GEMINI_API_KEY) }));
+app.post('/api/auth/signup', async (req, res, next) => {
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    const displayName = String(req.body?.displayName || '').trim().slice(0, 120);
+    const password = String(req.body?.password || '');
+    if (!/^\S+@\S+\.\S+$/.test(email)) return res.status(400).json({ error: 'Enter a valid email address.' });
+    if (displayName.length < 2) return res.status(400).json({ error: 'Enter a name with at least two characters.' });
+    if (password.length < 8) return res.status(400).json({ error: 'Use a password with at least 8 characters.' });
+    const duplicate = await pb.collection('app_accounts').getFirstListItem(`email = "${email.replaceAll('"', '')}"`).catch(() => null);
+    if (duplicate) return res.status(409).json({ error: 'An account already exists for that email.' });
+    const user = await pb.collection('app_accounts').create({ email, displayName, passwordHash: hashPassword(password), role: 'user', active: true });
+    const token = randomBytes(32).toString('base64url');
+    sessions.set(token, { userId: user.id, email: user.email, displayName: user.displayName, role: user.role });
+    res.status(201).json({ token, user: { id: user.id, email: user.email, displayName: user.displayName, role: user.role } });
+  } catch (error) { next(error); }
+});
+app.post('/api/auth/login', async (req, res, next) => {
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    const password = String(req.body?.password || '');
+    const user = await pb.collection('app_accounts').getFirstListItem(`email = "${email.replaceAll('"', '')}"`).catch(() => null);
+    if (!user?.active || !verifyPassword(password, user.passwordHash)) return res.status(401).json({ error: 'Email or password is incorrect.' });
+    const token = randomBytes(32).toString('base64url');
+    sessions.set(token, { userId: user.id, email: user.email, displayName: user.displayName, role: user.role });
+    res.json({ token, user: { id: user.id, email: user.email, displayName: user.displayName, role: user.role } });
+  } catch (error) { next(error); }
+});
+app.get('/api/auth/me', requireUser, (req, res) => res.json({ user: { id: req.user.userId, email: req.user.email, displayName: req.user.displayName, role: req.user.role } }));
+app.post('/api/auth/logout', requireUser, (req, res) => {
+  sessions.delete(req.get('authorization')?.replace(/^Bearer\s+/i, ''));
+  res.json({ ok: true });
+});
+app.get('/api/account/metrics', requireUser, async (req, res, next) => {
+  try {
+    const ownReports = await pb.collection('reports').getFullList({ filter: `reporterId = "${req.user.userId}"`, fields: 'id,reviewStatus' });
+    const reportIds = ownReports.map((report) => report.id);
+    const impactEvents = reportIds.length ? await pb.collection('impact_events').getFullList({ fields: 'id,report' }).catch(() => []) : [];
+    const ownReportIds = new Set(reportIds);
+    res.json({ metrics: { reportsSubmitted: ownReports.length, verifiedReports: ownReports.filter((report) => report.reviewStatus === 'verified').length, awaitingReview: ownReports.filter((report) => ['unverified', 'needs_review'].includes(report.reviewStatus)).length, impactEventsRecorded: impactEvents.filter((event) => ownReportIds.has(event.report)).length } });
+  } catch (error) { next(error); }
+});
+app.get('/api/account/reports', requireUser, async (req, res, next) => {
+  try {
+    const records = await pb.collection('reports').getFullList({ filter: `reporterId = "${req.user.userId}"`, sort: '-observedAt' });
+    const publicOrigin = `http://${req.get('host')}`;
+    res.json({ reports: await Promise.all(records.map((record) => projectReport(record, publicOrigin, { includePrivateLocation: true }))) });
+  } catch (error) { next(error); }
+});
+app.get('/api/moderation/metrics', requireModerator, async (_req, res, next) => {
+  try {
+    const [users, reports] = await Promise.all([
+      pb.collection('app_accounts').getFullList({ fields: 'id,email,displayName,role,created' }),
+      pb.collection('reports').getFullList({ fields: 'id,reporterId,reporterName,reviewStatus,observedAt' }),
+    ]);
+    const byUser = new Map();
+    for (const report of reports) {
+      if (!report.reporterId) continue;
+      const aggregate = byUser.get(report.reporterId) || { reportsSubmitted: 0, verifiedReports: 0, awaitingReview: 0 };
+      aggregate.reportsSubmitted += 1;
+      if (report.reviewStatus === 'verified') aggregate.verifiedReports += 1;
+      if (['unverified', 'needs_review'].includes(report.reviewStatus)) aggregate.awaitingReview += 1;
+      aggregate.lastReportAt = [aggregate.lastReportAt, report.observedAt].filter(Boolean).sort().at(-1);
+      byUser.set(report.reporterId, aggregate);
+    }
+    const contributors = users.filter((user) => user.role === 'user').map((user) => ({ id: user.id, displayName: user.displayName, email: user.email, accountCreatedAt: user.created || null, ...(byUser.get(user.id) || { reportsSubmitted: 0, verifiedReports: 0, awaitingReview: 0 }) })).sort((a, b) => b.reportsSubmitted - a.reportsSubmitted || a.displayName.localeCompare(b.displayName));
+    res.json({ metrics: { registeredUsers: contributors.length, reportsSubmitted: reports.length, verifiedReports: reports.filter((report) => report.reviewStatus === 'verified').length, awaitingReview: reports.filter((report) => ['unverified', 'needs_review'].includes(report.reviewStatus)).length }, contributors });
+  } catch (error) { next(error); }
+});
 app.get('/api/species', (req, res) => {
   const search = normalize(String(req.query.search || ''));
   const results = search
@@ -248,14 +351,15 @@ async function proxyFile(collection, id, filename, req, res) {
     const parentReport = await pb.collection('reports').getOne(reportId);
     if (parentReport.reviewStatus === 'rejected') {
       const accessToken = req.get('authorization')?.replace(/^Bearer\s+/i, '');
-      if (!accessToken || !sessions.has(accessToken)) return res.status(404).end();
+      const session = accessToken && sessions.get(accessToken);
+      if (!session || (session.role !== 'moderator' && session.userId !== parentReport.reporterId)) return res.status(404).end();
     }
     const token = await pb.files.getToken();
     const url = `${PB_URL}/api/files/${collection}/${encodeURIComponent(id)}/${encodeURIComponent(filename)}?token=${encodeURIComponent(token)}`;
     const response = await fetch(url);
     if (!response.ok) return res.status(response.status).end();
     res.setHeader('Content-Type', response.headers.get('content-type') || 'application/octet-stream');
-    res.setHeader('Cache-Control', 'public, max-age=300');
+    res.setHeader('Cache-Control', 'private, max-age=300');
     res.send(Buffer.from(await response.arrayBuffer()));
   } catch { res.status(502).end(); }
 }
@@ -263,41 +367,17 @@ app.get('/api/files/:id/:filename', (req, res) => proxyFile('reports', req.param
 app.get('/api/photo-files/:id/:filename', (req, res) => proxyFile('report_photos', req.params.id, req.params.filename, req, res));
 app.get('/api/impact-files/:id/:filename', (req, res) => proxyFile('impact_events', req.params.id, req.params.filename, req, res));
 
-app.post('/api/moderation/login', async (req, res, next) => {
-  try {
-    const email = String(req.body?.email || '').trim().toLowerCase();
-    const password = String(req.body?.password || '');
-    const reviewer = await pb.collection('reviewers').getFirstListItem(`email = "${email.replaceAll('"', '')}"`).catch(() => null);
-    if (!reviewer?.active || !verifyPassword(password, reviewer.passwordHash)) return res.status(401).json({ error: 'Email or password is incorrect.' });
-    const token = randomBytes(32).toString('base64url');
-    sessions.set(token, { reviewerId: reviewer.id, role: reviewer.role });
-    res.json({ token, role: reviewer.role });
-  } catch (error) { next(error); }
-});
-
 app.post('/api/moderation/logout', requireReviewer, (req, res) => {
   const token = req.get('authorization')?.replace(/^Bearer\s+/i, '');
   sessions.delete(token);
   res.json({ ok: true });
 });
 
-app.post('/api/moderation/invitations', requireModerator, async (req, res, next) => {
-  try {
-    const email = String(req.body?.email || '').trim().toLowerCase();
-    if (!/^\S+@\S+\.\S+$/.test(email)) return res.status(400).json({ error: 'Enter a valid email address.' });
-    const duplicate = await pb.collection('reviewers').getFirstListItem(`email = "${email.replaceAll('"', '')}"`).catch(() => null);
-    if (duplicate) return res.status(409).json({ error: 'A reviewer account already exists for that email.' });
-    const temporaryPassword = randomBytes(12).toString('base64url');
-    await pb.collection('reviewers').create({ email, passwordHash: hashPassword(temporaryPassword), role: 'reviewer', active: true });
-    res.status(201).json({ email, role: 'reviewer', temporaryPassword, message: 'Share this temporary password with the invited reviewer.' });
-  } catch (error) { next(error); }
-});
-
 app.get('/api/moderation/reports', requireReviewer, async (_req, res, next) => {
   try {
     const records = await pb.collection('reports').getFullList({ sort: '-observedAt' });
     const publicOrigin = `http://${_req.get('host')}`;
-    res.json({ reports: await Promise.all(records.map((record) => projectReport(record, publicOrigin))) });
+    res.json({ reports: await Promise.all(records.map((record) => projectReport(record, publicOrigin, { includePrivateLocation: true, includeReporter: true }))) });
   } catch (error) { next(error); }
 });
 
@@ -329,7 +409,7 @@ app.post('/api/identify', upload.single('photo'), async (req, res) => {
   }
 });
 
-app.post('/api/reports', upload.single('photo'), async (req, res, next) => {
+app.post('/api/reports', upload.single('photo'), requireUser, async (req, res, next) => {
   try {
     const body = req.body;
     const speciesName = String(body.speciesName || '').trim();
@@ -360,6 +440,8 @@ app.post('/api/reports', upload.single('photo'), async (req, res, next) => {
       exactLocationPublic,
       reviewStatus: 'unverified',
       reviewNote: '',
+      reporterId: req.user.userId,
+      reporterName: req.user.displayName,
     };
     for (const [key, value] of Object.entries(fields)) report.append(key, String(value));
     report.append('photo', new Blob([image], { type: 'image/jpeg' }), 'plant.jpg');
@@ -369,10 +451,11 @@ app.post('/api/reports', upload.single('photo'), async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
-app.post('/api/reports/:id/photos', upload.single('photo'), async (req, res, next) => {
+app.post('/api/reports/:id/photos', upload.single('photo'), requireUser, async (req, res, next) => {
   try {
     const report = await pb.collection('reports').getOne(req.params.id);
     if (report.reviewStatus === 'rejected') return res.status(404).json({ error: 'This report is not available.' });
+    if (report.reporterId !== req.user.userId && req.user.role !== 'moderator') return res.status(403).json({ error: 'You can only add photos to your own reports.' });
     const existing = await pb.collection('report_photos').getFullList({ filter: `report = "${report.id}"` });
     const count = (report.photo ? 1 : 0) + existing.length;
     if (count >= MAX_REPORT_PHOTOS) return res.status(400).json({ error: `A report can include up to ${MAX_REPORT_PHOTOS} photos.` });
