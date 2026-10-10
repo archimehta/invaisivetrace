@@ -32,7 +32,7 @@ export const colors = { ink: '#17372A', muted: '#728075', green: '#244B36', pale
 
 
 
-export async function uploadPhoto<T>(path: string, photo: ImagePicker.ImagePickerAsset, parameters: Record<string, string> = {}): Promise<T> {
+export async function uploadPhoto<T>(path: string, photo: ImagePicker.ImagePickerAsset, parameters: Record<string, string> = {}, token?: string): Promise<T> {
 
 const response = await FileSystem.uploadAsync(`${API_URL}${path}`, photo.uri, {
 
@@ -45,6 +45,7 @@ const response = await FileSystem.uploadAsync(`${API_URL}${path}`, photo.uri, {
     mimeType: photo.mimeType || 'image/jpeg',
 
     parameters,
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
 
   });
 

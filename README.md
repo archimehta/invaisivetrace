@@ -16,12 +16,12 @@ Expo React Native app for photo-assisted reporting of possible invasive plant si
 2. Ask Gemini for a tentative identification (optional); confirm it, pick another catalog plant, or enter an unlisted name.
 3. See whether the name matches the FISC list. An unmatched name is not called non-invasive.
 4. Confirm the pin and public-location preference, then submit.
-5. The community map displays the report as **unverified** until a moderator reviews it in PocketBase.
+5. The community map displays the report as **unverified** until the configured moderator reviews it.
 
 The app requires a photo for a report. If Gemini is unset or unavailable, manual catalog selection or name entry still works. Report submission and map sync require the local backend.
 
 ## Architecture
 
-PocketBase stores the catalog, reports, photos, and review status. A small Node API sits in front of it, keeps the Gemini key off the phone, and returns only public-safe map coordinates. Precise coordinates remain available to moderators; public coordinates are generalized unless the reporter opts into exact display.
+PocketBase stores accounts, the catalog, reports, photos, and review status. Community members sign up as regular users; the backend seeds one moderator account from `DEMO_MODERATOR_EMAIL` and `DEMO_MODERATOR_PASSWORD`. Reports are associated with their uploader for private metrics, while public map output omits account identity and generalizes coordinates unless the reporter opts into exact display. See [backend/README.md](backend/README.md) for account setup and service details.
 
 See [backend/README.md](backend/README.md) for service setup and [data/README.md](data/README.md) for catalog provenance and refresh.

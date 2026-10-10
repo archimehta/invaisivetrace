@@ -6,6 +6,7 @@
 - Gemini suggests a tentative identification; users can confirm it, choose any item from the Florida Invasive Species Council (FISC) Categories I/II catalog, or enter an unlisted plant name.
 - FISC match labels a report with category and source. No match means “not found in the FISC catalog,” never “not invasive.” Both listed and possible unlisted sightings can be reported.
 - Reports start `unverified`; a moderator reviews and changes status in PocketBase.
+- Public registration creates normal member accounts. The API seeds one moderator account from backend environment settings; uploaded reports are linked privately to the submitting account for participation metrics.
 - Public map shows exact coordinates only with explicit opt-in; otherwise it shows coordinates rounded to three decimal places. Precise coordinates remain available to the moderator.
 
 ## Architecture
@@ -18,12 +19,12 @@ Expo / React Native
   └─ local Node API (same Wi-Fi)
        ├─ Gemini image identification (API key stays on laptop)
        ├─ FISC name matching and coordinate generalization
-       └─ PocketBase superuser access
+       └─ PocketBase superuser access, account roles, and private uploader attribution
             ├─ species: full FISC snapshot
             └─ reports: photo, identification, exact/public coordinates, review state
 ```
 
-The mobile app never receives PocketBase superuser credentials. The API exposes a public projection of report fields and proxies report images. PocketBase's dashboard is the moderator interface for this local MVP.
+The mobile app never receives PocketBase superuser credentials. The API exposes a public projection of report fields and proxies report images. Only the configured moderator can view member contribution metrics or use moderation endpoints.
 
 ## Dataset and status rules
 
@@ -34,7 +35,7 @@ Refresh the snapshot with `npm run catalog:import` after checking the upstream t
 ## Limitations
 
 - Gemini can misidentify plants; users are asked to confirm or correct its suggestion.
-- The prototype has no user accounts, abuse controls, notification pipeline, or agency integration.
+- The prototype has basic accounts but no email verification, password reset, abuse controls, notification pipeline, or agency integration.
 - Moderator verification is manual through PocketBase; no external ecological organization is represented as a partner.
 - The map requires internet access for OpenStreetMap tiles and Leaflet CDN assets.
 - The backend is intended for the hackathon LAN demo, not public deployment as-is.

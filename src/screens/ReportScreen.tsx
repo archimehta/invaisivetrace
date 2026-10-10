@@ -4,7 +4,7 @@ import { ActionButton, MapPanel, colors, styles, findInCatalog } from '../compon
 import { SightingsVM } from '../hooks/useSightings';
 
 export function ReportScreen({vm}:{vm:SightingsVM}) {
- const {photo,setPhoto,guess,setGuess,guessMessage,isIdentifying,selectedSpecies,setSelectedSpecies,manualName,setManualName,manualMode,setManualMode,search,setSearch,note,setNote,exactLocationPublic,setExactLocationPublic,location,setLocation,locationMessage,setLocationMessage,isSubmitting,apiOnline,filteredSpecies,choosePhoto,identifyPhoto,setCurrentLocation,submitReport,activeCenter} = vm;
+ const {photo,setPhoto,guess,setGuess,guessMessage,isIdentifying,selectedSpecies,setSelectedSpecies,manualName,setManualName,manualMode,setManualMode,search,setSearch,note,setNote,exactLocationPublic,setExactLocationPublic,location,setLocation,locationMessage,setLocationMessage,isSubmitting,apiOnline,filteredSpecies,choosePhoto,identifyPhoto,setCurrentLocation,submitReport,activeCenter,authUser,setTab} = vm;
  const [step,setStep] = useState<1|2|3|4>(1);
  const plantReady=Boolean(selectedSpecies?.commonNames[0]||manualName.trim());
  const goNext=()=>{
@@ -13,6 +13,7 @@ export function ReportScreen({vm}:{vm:SightingsVM}) {
    if(step===3 && !location){Alert.alert('Choose a location','Use your location or tap the map to place a pin.');return;}
    setStep((step+1) as 1|2|3|4);
  };
+ if(!authUser) return <View style={[styles.content,{flex:1,justifyContent:'center'}]}><Text style={styles.eyebrow}>COMMUNITY ACCOUNT</Text><Text style={styles.headingSmall}>Sign in to share a sighting</Text><Text style={styles.bodyCopy}>An account lets you track your reports and helps the project measure community participation. Your name stays off the public map.</Text><ActionButton title="Go to account" onPress={()=>setTab('account')}/></View>;
  return <View style={{flex:1}}>
  <View style={{paddingHorizontal:20,paddingTop:18,paddingBottom:12,backgroundColor:colors.paper}}>
    <Text style={{color:colors.green,fontSize:10,fontWeight:'800',letterSpacing:1.5}}>COMMUNITY FIELD NOTE</Text>

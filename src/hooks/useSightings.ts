@@ -8,11 +8,21 @@ import { Species, Report, PlantGuess, Coordinate, catalog, API_URL, ORLANDO, fin
 export function useSightings() {
 
 
-const [tab, setTab] = useState<'home' | 'map' | 'sightings' | 'report'>('home');
+const [tab, setTab] = useState<'home' | 'map' | 'sightings' | 'report' | 'account'>('home');
 
 const [reports, setReports] = useState<Report[]>([]);
 
 const [apiOnline, setApiOnline] = useState(false);
+
+const [authToken, setAuthToken] = useState<string | null>(null);
+const [authUser, setAuthUser] = useState<{ id: string; email: string; displayName: string; role: 'user' | 'moderator' } | null>(null);
+const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+const [authName, setAuthName] = useState('');
+const [authEmail, setAuthEmail] = useState('');
+const [authPassword, setAuthPassword] = useState('');
+const [authBusy, setAuthBusy] = useState(false);
+const [userMetrics, setUserMetrics] = useState<{ reportsSubmitted: number; verifiedReports: number; awaitingReview: number; impactEventsRecorded: number } | null>(null);
+const [moderatorMetrics, setModeratorMetrics] = useState<{ metrics: { registeredUsers: number; reportsSubmitted: number; verifiedReports: number; awaitingReview: number }; contributors: { id: string; displayName: string; email: string; reportsSubmitted: number; verifiedReports: number; awaitingReview: number; lastReportAt?: string }[] } | null>(null);
 
 const [photo, setPhoto] = useState<ImagePicker.ImagePickerAsset | null>(null);
 
@@ -63,6 +73,53 @@ const payload = await response.json();
 
 
   useEffect(() => { void refreshReports(); }, []);
+
+const refreshAccountData = async (token = authToken, role = authUser?.role) => {
+    if (!token) return;
+    const headers = { Authorization: `Bearer ${token}` };
+    try {
+      const response = await fetch(`${API_URL}/api/account/metrics`, { headers });
+      if (!response.ok) throw new Error('Could not load your contribution metrics.');
+      const responseText = await response.text();
+      let payload: any;
+      try { payload = JSON.parse(responseText); }
+      catch { throw new Error(`The API returned a non-JSON response (HTTP ${response.status}). Restart the updated backend and try again.`); }
+      setUserMetrics(payload.metrics);
+      if (role === 'moderator') {
+        const adminResponse = await fetch(`${API_URL}/api/moderation/metrics`, { headers });
+        if (adminResponse.ok) setModeratorMetrics(await adminResponse.json());
+      }
+    } catch (error) { console.warn('Account metrics unavailable:', error); }
+  };
+
+const authenticate = async () => {
+    setAuthBusy(true);
+    try {
+      const isSignup = authMode === 'signup';
+      const response = await fetch(`${API_URL}/api/auth/${isSignup ? 'signup' : 'login'}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: authEmail, password: authPassword, displayName: authName }),
+      });
+      const responseText = await response.text();
+      let payload: any;
+      try { payload = JSON.parse(responseText); }
+      catch { throw new Error(`The API returned a non-JSON response (HTTP ${response.status}). Restart the updated backend and try again.`); }
+      if (!response.ok) throw new Error(payload.error || 'Could not sign in.');
+      setAuthToken(payload.token);
+      setAuthUser(payload.user);
+      setAuthPassword('');
+      setModeratorMetrics(null);
+      await refreshAccountData(payload.token, payload.user.role);
+    } catch (error) {
+      Alert.alert(authMode === 'signup' ? 'Could not create account' : 'Could not sign in', error instanceof Error ? error.message : 'Check the API connection and try again.');
+    } finally { setAuthBusy(false); }
+  };
+
+const signOut = async () => {
+    const token = authToken;
+    try { if (token) await fetch(`${API_URL}/api/auth/logout`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } }); } catch { /* Sign out locally even if the API is offline. */ }
+    setAuthToken(null); setAuthUser(null); setUserMetrics(null); setModeratorMetrics(null); setAuthPassword('');
+  };
 
 
 
@@ -272,6 +329,8 @@ const scientificName = selectedSpecies?.scientificName || (!manualMode || manual
 
     try {
 
+      if (!authToken) { setTab('account'); throw new Error('Create an account or sign in before submitting a sighting.'); }
+
       await uploadPhoto('/api/reports', photo, {
 
         speciesName,
@@ -290,9 +349,10 @@ const scientificName = selectedSpecies?.scientificName || (!manualMode || manual
 
         exactLocationPublic: String(exactLocationPublic),
 
-      });
+      }, authToken);
 
       await refreshReports();
+      await refreshAccountData(authToken, authUser?.role);
 
       setPhoto(null); setGuess(null); setSelectedSpecies(null); setManualName(''); setManualMode(false); setSearch(''); setNote(''); setLocation(null); setExactLocationPublic(false); setTab('home');
 
@@ -315,6 +375,6 @@ const reportCountLabel = `${reports.length} ${reports.length === 1 ? 'sighting' 
 
 
 
-return {tab,setTab,reports,apiOnline,photo,setPhoto,guess,setGuess,guessMessage,isIdentifying,selectedSpecies,setSelectedSpecies,manualName,setManualName,manualMode,setManualMode,search,setSearch,note,setNote,exactLocationPublic,setExactLocationPublic,location,setLocation,locationMessage,setLocationMessage,isSubmitting,refreshReports,filteredSpecies,choosePhoto,identifyPhoto,setCurrentLocation,submitReport,activeCenter,reportCountLabel};
+return {tab,setTab,reports,apiOnline,photo,setPhoto,guess,setGuess,guessMessage,isIdentifying,selectedSpecies,setSelectedSpecies,manualName,setManualName,manualMode,setManualMode,search,setSearch,note,setNote,exactLocationPublic,setExactLocationPublic,location,setLocation,locationMessage,setLocationMessage,isSubmitting,refreshReports,filteredSpecies,choosePhoto,identifyPhoto,setCurrentLocation,submitReport,activeCenter,reportCountLabel,authToken,authUser,authMode,setAuthMode,authName,setAuthName,authEmail,setAuthEmail,authPassword,setAuthPassword,authBusy,authenticate,signOut,userMetrics,moderatorMetrics,refreshAccountData};
 }
 export type SightingsVM = ReturnType<typeof useSightings>;
