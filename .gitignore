@@ -6,3 +6,5 @@ backend/pb_data/
 *.log
 .DS_Store
 .local/
+backend/pb_migrations/
+backend/pocketbase
