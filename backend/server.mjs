@@ -15,6 +15,13 @@ const PB_URL = process.env.PB_URL || 'http://127.0.0.1:8090';
 const PB_EMAIL = process.env.PB_SUPERUSER_EMAIL;
 const PB_PASSWORD = process.env.PB_SUPERUSER_PASSWORD;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
+const COST_GEMINI_MODEL = process.env.COST_GEMINI_MODEL || 'gemini-2.5-flash';
+const COST_API_KEY = process.env.COST_GEMINI_API_KEY;
+const requestedDailyCap = Number(process.env.COST_MAX_ATTEMPTS_PER_DAY || 50);
+const COST_MAX_ATTEMPTS_PER_DAY = Number.isFinite(requestedDailyCap) ? Math.max(1, Math.floor(requestedDailyCap)) : 50;
+const COST_REQUEST_TIMEOUT_MS = 30_000;
+const COST_MAX_AREA_SQFT = 43_560;
+const COST_SCOPE = 'One removal visit including labor, treatment materials, and disposal; excludes repeat visits and restoration.';
 const mapDecimals = Math.min(5, Math.max(1, Number(process.env.PUBLIC_MAP_DECIMALS || 3)));
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_REPORT_PHOTOS = 4;
@@ -26,6 +33,7 @@ if (!PB_EMAIL || !PB_PASSWORD) {
 }
 
 const catalog = JSON.parse(await readFile(path.join(root, 'data/fisc-species.json'), 'utf8'));
+const floridaCounties = JSON.parse(await readFile(path.join(root, 'data/florida-counties.geojson'), 'utf8'));
 const pb = new PocketBase(PB_URL);
 pb.autoCancellation(false);
 const app = express();
@@ -76,11 +84,27 @@ async function setupDatabase() {
     number('latitude', true), number('longitude', true), number('publicLatitude', true), number('publicLongitude', true),
     text('locationLabel', false, 160),
     bool('exactLocationPublic'), text('reviewStatus', true, 32), text('reviewNote', false, 1200),
+    number('coverageAreaSqFt'), text('estimateStatus', false, 32), text('estimateReason', false, 80),
+    text('estimateCounty', false, 120), text('estimateCountyGeoid', false, 8),
+    number('estimateLowUsd'), number('estimateHighUsd'), text('estimateMethod', false, 800),
+    text('estimateRationale', false, 1200), text('estimateAssumptions', false, 1200),
+    text('estimateScope', false, 500), text('estimateExclusions', false, 500), json('estimateSources'),
+    text('estimateGeneratedAt', false, 40), number('estimateInputVersion'),
     text('reporterId', false, 64), text('reporterName', false, 160),
     { name: 'photo', type: 'file', required: true, maxSelect: 1, maxSize: MAX_IMAGE_BYTES, mimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/heic'] },
   ], ['CREATE INDEX idx_reports_status ON reports (reviewStatus)']);
 
   const reportsCollection = await pb.collections.getOne('reports');
+  await ensureCollection('removal_estimate_jobs', [
+    { name: 'report', type: 'relation', collectionId: reportsCollection.id, cascadeDelete: true, maxSelect: 1, required: true },
+    number('inputVersion', true), text('status', true, 24), number('attempts', true),
+    text('nextAttemptAt', false, 40), text('leaseUntil', false, 40), text('attemptedAt', false, 40),
+    text('diagnostic', false, 300),
+  ], ['CREATE INDEX idx_removal_jobs_status ON removal_estimate_jobs (status,nextAttemptAt)']);
+  await ensureCollection('removal_estimate_usage', [
+    text('usageDate', true, 10), number('attempts', true),
+  ], ['CREATE UNIQUE INDEX idx_removal_usage_date ON removal_estimate_usage (usageDate)']);
+
   await ensureCollection('report_photos', [
     { name: 'report', type: 'relation', collectionId: reportsCollection.id, cascadeDelete: true, maxSelect: 1, required: true },
     number('position', true), bool('isPrimary'),
@@ -169,6 +193,16 @@ async function setupDatabase() {
       occurredAt: report.observedAt || new Date().toISOString(),
     });
   }
+  const estimateReports = await pb.collection('reports').getFullList({ fields: 'id,speciesName,scientificName,speciesId,isFiscListed,listedCategory,latitude,longitude,reviewStatus,coverageAreaSqFt,estimateStatus,estimateInputVersion' });
+  for (const report of estimateReports) {
+    if (report.estimateStatus) continue;
+    const eligibility = estimateEligibility(report);
+    await pb.collection('reports').update(report.id, {
+      estimateStatus: eligibility.status || 'not_requested', estimateReason: eligibility.reason || '',
+      estimateCounty: eligibility.county?.name || '', estimateCountyGeoid: eligibility.county?.geoid || '',
+      estimateInputVersion: Number(report.estimateInputVersion || 1),
+    });
+  }
   console.log(`PocketBase ready: ${catalog.length} FISC plants loaded.`);
 }
 
@@ -179,6 +213,68 @@ const findSpecies = (value) => {
   if (!wanted) return null;
   return catalog.find((species) => speciesNames(species).some((candidate) => normalize(candidate) === wanted)) || null;
 };
+const pointInRing = (longitude, latitude, ring) => {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i]; const [xj, yj] = ring[j];
+    const crosses = (yi > latitude) !== (yj > latitude)
+      && longitude < ((xj - xi) * (latitude - yi)) / ((yj - yi) || Number.EPSILON) + xi;
+    if (crosses) inside = !inside;
+  }
+  return inside;
+};
+const pointInPolygon = (longitude, latitude, rings) => pointInRing(longitude, latitude, rings[0]) && !rings.slice(1).some((ring) => pointInRing(longitude, latitude, ring));
+function resolveFloridaCounty(latitude, longitude) {
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return null;
+  const matches = [];
+  for (const feature of floridaCounties.features) {
+    const { type, coordinates } = feature.geometry;
+    const polygons = type === 'Polygon' ? [coordinates] : type === 'MultiPolygon' ? coordinates : [];
+    if (polygons.some((polygon) => pointInPolygon(longitude, latitude, polygon))) matches.push(feature.properties);
+  }
+  if (matches.length !== 1) return { unresolved: true };
+  return { name: matches[0].name, geoid: matches[0].geoid };
+}
+function estimateEligibility(report) {
+  if (report.reviewStatus !== 'verified') return { status: 'not_requested', reason: 'not_verified' };
+  const species = findSpecies(report.speciesId) || findSpecies(report.scientificName) || findSpecies(report.speciesName);
+  if (!report.isFiscListed || !species || !['Category I', 'Category II'].includes(species.category)) return { status: 'ineligible', reason: 'species_unlisted' };
+  const county = resolveFloridaCounty(Number(report.latitude), Number(report.longitude));
+  if (!county) return { status: 'ineligible', reason: 'outside_florida' };
+  if (county.unresolved) {
+    const roughlyFlorida = Number(report.latitude) >= 24.3 && Number(report.latitude) <= 31.1 && Number(report.longitude) >= -87.7 && Number(report.longitude) <= -80.0;
+    return { status: 'ineligible', reason: roughlyFlorida ? 'location_unresolved' : 'outside_florida' };
+  }
+  if (!Number.isFinite(Number(report.coverageAreaSqFt)) || Number(report.coverageAreaSqFt) <= 0) return { status: 'coverage_needed', reason: 'coverage_needed', county };
+  return { status: null, reason: '', county };
+}
+function currentEstimateStatus(report) {
+  const eligibility = estimateEligibility(report);
+  if (eligibility.status) return eligibility.status;
+  if (report.estimateStatus === 'stale') return 'stale';
+  return report.estimateStatus || 'not_requested';
+}
+function publicEstimate(report) {
+  const status = currentEstimateStatus(report);
+  if (report.reviewStatus !== 'verified' || !report.isFiscListed) return null;
+  if (status === 'ineligible' || status === 'coverage_needed' || status === 'not_requested') return null;
+  if (status !== 'ready' || !Number.isFinite(report.estimateLowUsd) || !Number.isFinite(report.estimateHighUsd)) {
+    return { status, areaSqFt: status === 'stale' ? report.coverageAreaSqFt : undefined };
+  }
+  return {
+    status,
+    areaSqFt: report.coverageAreaSqFt,
+    lowUsd: report.estimateLowUsd,
+    highUsd: report.estimateHighUsd,
+    method: report.estimateMethod,
+    rationale: report.estimateRationale,
+    assumptions: report.estimateAssumptions,
+    scope: report.estimateScope,
+    exclusions: report.estimateExclusions,
+    sources: report.estimateSources || [],
+    generatedAt: report.estimateGeneratedAt,
+  };
+}
 const roundCoordinate = (value) => Number(Number(value).toFixed(mapDecimals));
 function contributorTitle(confirmedReports) {
   if (confirmedReports >= 20) return 'Charles Darwin';
@@ -212,6 +308,8 @@ async function projectReport(record, publicOrigin = `http://localhost:${PORT}`, 
   photoUrl: record.photo ? fileUrl(record, record.photo, publicOrigin) : null,
   activity: activity.map((item) => ({ id: item.id, type: item.eventType, actorRole: item.actorRole, publicReason: item.publicReason, fromStatus: item.fromStatus, toStatus: item.toStatus, occurredAt: item.occurredAt })),
   impactEvents: impactEvents.map((item) => ({ id: item.id, type: item.eventType, date: item.eventDate, note: item.note, actorRole: item.actorRole, photos: (item.photos || []).map((filename) => fileUrl(item, filename, publicOrigin, 'api/impact-files')) })),
+  removalEstimate: publicEstimate(record),
+  ...(includePrivateLocation ? { coverageAreaSqFt: record.coverageAreaSqFt, estimateStatus: currentEstimateStatus(record), estimateReason: estimateEligibility(record).reason, estimateCounty: record.estimateCounty || resolveFloridaCounty(Number(record.latitude), Number(record.longitude))?.name || null } : {}),
   created: record.created || record.observedAt,
   ...(includeReporter ? { reporter: { id: record.reporterId || null, displayName: record.reporterName || 'Community member' } } : {}),
   };
@@ -266,7 +364,220 @@ async function addActivity(reportId, event) {
   return pb.collection('report_activity').create({ report: reportId, occurredAt: new Date().toISOString(), ...event });
 }
 
-app.get('/api/health', (_req, res) => res.json({ ok: true, accountSystem: true, catalogCount: catalog.length, geminiEnabled: Boolean(process.env.GEMINI_API_KEY) }));
+const currentVersion = (report) => Number(report.estimateInputVersion || 1);
+const safeReason = (error) => error?.code || 'estimation_failed';
+async function supersedeJobs(reportId) {
+  const jobs = await pb.collection('removal_estimate_jobs').getFullList({ filter: `report = "${reportId}"` }).catch(() => []);
+  for (const job of jobs.filter((item) => ['queued', 'leased'].includes(item.status))) {
+    await pb.collection('removal_estimate_jobs').update(job.id, { status: 'superseded', leaseUntil: '', nextAttemptAt: '' }).catch(() => {});
+  }
+}
+async function queueEstimate(report, { force = false } = {}) {
+  const eligibility = estimateEligibility(report);
+  if (eligibility.status) {
+    return pb.collection('reports').update(report.id, {
+      estimateStatus: eligibility.status,
+      estimateReason: eligibility.reason,
+      estimateCounty: eligibility.county?.name || '',
+      estimateCountyGeoid: eligibility.county?.geoid || '',
+    });
+  }
+  const version = currentVersion(report);
+  const existing = await pb.collection('removal_estimate_jobs').getFirstListItem(`report = "${report.id}" && inputVersion = ${version} && (status = "queued" || status = "leased" || status = "succeeded")`).catch(() => null);
+  if (existing && !force) {
+    if (existing.status === 'succeeded') return pb.collection('reports').update(report.id, { estimateStatus: 'ready', estimateReason: '' });
+    return pb.collection('reports').update(report.id, { estimateStatus: 'pending', estimateReason: '' });
+  }
+  const updatedReport = await pb.collection('reports').update(report.id, {
+    estimateStatus: 'pending', estimateReason: '', estimateCounty: eligibility.county.name,
+    estimateCountyGeoid: eligibility.county.geoid,
+  });
+  try {
+    await pb.collection('removal_estimate_jobs').create({
+      report: report.id, inputVersion: version, status: 'queued', attempts: 0,
+      nextAttemptAt: new Date().toISOString(), leaseUntil: '', attemptedAt: '', diagnostic: '',
+    });
+  } catch {
+    return pb.collection('reports').update(report.id, { estimateStatus: 'unavailable', estimateReason: 'queue_failed' });
+  }
+  return updatedReport;
+}
+function normalizedSourceUrl(value) {
+  try { const url = new URL(value); if (!['http:', 'https:'].includes(url.protocol)) return ''; url.hash = ''; return url.toString().replace(/\/$/, ''); }
+  catch { return ''; }
+}
+function independentHost(value) {
+  try { return new URL(value).hostname.toLowerCase().replace(/^www\./, ''); }
+  catch { return ''; }
+}
+function extractGrounding(payload) {
+  const candidate = payload.candidates?.[0];
+  const grounding = candidate?.groundingMetadata;
+  const chunks = (grounding?.groundingChunks || []).map((chunk) => chunk.web).filter((web) => web?.uri);
+  const supported = new Map();
+  for (const support of grounding?.groundingSupports || []) {
+    const segment = String(support.segment?.text || '');
+    for (const index of support.groundingChunkIndices || []) {
+      const web = chunks[index];
+      if (web?.uri) supported.set(normalizedSourceUrl(web.uri), `${supported.get(normalizedSourceUrl(web.uri)) || ''} ${segment}`);
+    }
+  }
+  return { chunks, supported };
+}
+function validateEstimate(payload, report) {
+  let value;
+  try {
+    let resultText = payload.candidates?.[0]?.content?.parts?.find((part) => part.text)?.text || '';
+    resultText = resultText.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+    value = JSON.parse(resultText);
+  }
+  catch { throw Object.assign(new Error('invalid_structured_output'), { code: 'invalid_structured_output', terminal: true }); }
+  if (!value || value.insufficientEvidence || !Array.isArray(value.sources)) throw Object.assign(new Error('insufficient_sources'), { code: 'insufficient_sources', terminal: true });
+  const { chunks, supported } = extractGrounding(payload);
+  const grounded = new Map(chunks.map((chunk) => [normalizedSourceUrl(chunk.uri), chunk]));
+  const minDate = Date.now() - 24 * 30.5 * 24 * 60 * 60 * 1000;
+  const accepted = [];
+  const hosts = new Set();
+  for (const source of value.sources) {
+    const url = normalizedSourceUrl(source.url);
+    const host = independentHost(url);
+    const dateMs = Date.parse(source.publishedDate);
+    const price = Number(source.quotedPrice);
+    const includes = new Set((source.includes || []).map((item) => String(item).toLowerCase()));
+    const supportingText = supported.get(url) || '';
+    const hasPriceSupport = /\$|\b\d+(?:\.\d+)?\s*(?:per|\/|sq\.?\s*ft|acre)/i.test(supportingText);
+    const supportedNumbers = (supportingText.match(/\d+(?:,\d{3})*(?:\.\d+)?/g) || []).map((value) => Number(value.replaceAll(',', '')));
+    const hasQuotedPriceSupport = supportedNumbers.some((value) => Math.abs(value - price) < 0.005);
+    const hasDateYearSupport = Number.isFinite(dateMs) && supportingText.includes(String(new Date(dateMs).getUTCFullYear()));
+    const hasCompleteScopeSupport = /labor|labour|crew/i.test(supportingText)
+      && /treat|herbicide|chemical/i.test(supportingText)
+      && /dispos|haul|debris removal/i.test(supportingText);
+    const geography = String(source.pricingGeography || '').slice(0, 120);
+    const geographySupported = /florida/i.test(supportingText) || (report.estimateCounty && supportingText.toLowerCase().includes(String(report.estimateCounty).toLowerCase()));
+    const evidence = String(source.evidenceClaim || '').trim();
+    const evidenceWords = evidence.split(/\s+/).filter(Boolean).length;
+    if (!url || !grounded.has(url) || !host || hosts.has(host) || !hasPriceSupport || !hasQuotedPriceSupport || !hasDateYearSupport || !hasCompleteScopeSupport) continue;
+    if (!geographySupported || (!/florida/i.test(geography) && !geography.toLowerCase().includes(String(report.estimateCounty || '').toLowerCase()))) continue;
+    if (!Number.isFinite(dateMs) || dateMs < minDate || dateMs > Date.now() + 24 * 60 * 60 * 1000) continue;
+    if (!Number.isFinite(price) || price <= 0 || !['sq_ft', 'acre'].includes(source.unit)) continue;
+    if (!['labor', 'treatment', 'disposal'].every((key) => includes.has(key))) continue;
+    const ratePerSqFt = source.unit === 'acre' ? price / 43_560 : price;
+    if (!Number.isFinite(ratePerSqFt) || ratePerSqFt <= 0 || !evidence || evidenceWords > 25) continue;
+    accepted.push({ title: String(source.title || host).slice(0, 240), url, publishedAt: new Date(dateMs).toISOString(), pricingGeography: geography, quotedPrice: price, quotedUnit: source.unit, ratePerSqFt, includes: ['labor', 'treatment', 'disposal'], evidence });
+    hosts.add(host);
+  }
+  if (accepted.length < 2) throw Object.assign(new Error('insufficient_grounded_pricing_sources'), { code: 'insufficient_sources', terminal: true });
+  const area = Number(report.coverageAreaSqFt);
+  const totals = accepted.map((source) => source.ratePerSqFt * area).filter(Number.isFinite);
+  if (totals.length < 2) throw Object.assign(new Error('invalid_cost_bounds'), { code: 'invalid_cost_bounds', terminal: true });
+  const region = report.estimateCounty || resolveFloridaCounty(Number(report.latitude), Number(report.longitude))?.name || 'Florida';
+  return {
+    estimateLowUsd: Math.round(Math.min(...totals) * 100) / 100,
+    estimateHighUsd: Math.round(Math.max(...totals) * 100) / 100,
+    estimateMethod: 'Deterministic range: the lowest and highest qualifying one-visit source rates per square foot multiplied by the reported infested area.',
+    estimateRationale: String(value.rationale || '').slice(0, 1200),
+    estimateAssumptions: `${String(value.assumptions || '').slice(0, 900)} Geographic pricing context: ${region}; statewide Florida proxy prices may be used when local comparable prices are unavailable.`,
+    estimateScope: COST_SCOPE,
+    estimateExclusions: 'Repeat visits and restoration.',
+    estimateSources: accepted.slice(0, 5),
+    estimateGeneratedAt: new Date().toISOString(),
+    estimateStatus: 'ready', estimateReason: '',
+  };
+}
+async function requestGroundedEstimate(report) {
+  if (!COST_API_KEY) throw Object.assign(new Error('estimator_unconfigured'), { code: 'estimator_unconfigured', terminal: true });
+  const species = findSpecies(report.speciesId) || findSpecies(report.scientificName) || findSpecies(report.speciesName);
+  const county = resolveFloridaCounty(Number(report.latitude), Number(report.longitude));
+  const context = county?.name ? `${county.name} County, Florida` : 'Florida statewide pricing context';
+  const requestBody = {
+    contents: [{ role: 'user', parts: [{ text: `Find recent, source-backed removal pricing for this Florida invasive plant. Confirmed species: ${species.scientificName} (${species.commonNames?.join(', ')}), FISC ${species.category}. Infested area: ${Number(report.coverageAreaSqFt)} square feet. Geographic context: ${context}. Required scope is one removal visit including labor, treatment materials, and disposal; exclude repeat visits and restoration. Florida invasive-plant proxies are acceptable, but disclose that assumption and prefer nearby prices. Return at least two independent sources published or updated within the last 24 months, each with an explicit comparable per-square-foot or per-acre price that fully includes labor, treatment, and disposal and is for a Florida location. Include only URLs actually returned by Google Search grounding and only when their grounding support contains explicit pricing, complete scope, and Florida locality. If any condition cannot be met, set insufficientEvidence=true and return no sources. Do not estimate prices from general guidance or invent dates, rates, URLs, locations, or scope details. Write each evidenceClaim as a paraphrase of at most 25 words, never as a quotation. Output only one valid JSON object with this shape: {"method":"string","rationale":"string","assumptions":"string","insufficientEvidence":false,"sources":[{"title":"string","url":"grounded URL","publishedDate":"YYYY-MM-DD","pricingGeography":"Florida locality","quotedPrice":0,"unit":"sq_ft or acre","includes":["labor","treatment","disposal"],"evidenceClaim":"short paraphrase"}]}.` }] }],
+    tools: [{ google_search: {} }],
+    generationConfig: { temperature: 0.1 },
+  };
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(COST_GEMINI_MODEL)}:generateContent`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': COST_API_KEY },
+    body: JSON.stringify(requestBody), signal: AbortSignal.timeout(COST_REQUEST_TIMEOUT_MS),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const retryable = response.status === 429 || response.status >= 500;
+    throw Object.assign(new Error(`gemini_http_${response.status}`), { code: retryable ? 'upstream_retryable' : 'upstream_rejected', terminal: !retryable });
+  }
+  return validateEstimate(payload, report);
+}
+async function bumpDailyUsage() {
+  const usageDate = new Date().toISOString().slice(0, 10);
+  let record = await pb.collection('removal_estimate_usage').getFirstListItem(`usageDate = "${usageDate}"`).catch(() => null);
+  if (!record) record = await pb.collection('removal_estimate_usage').create({ usageDate, attempts: 0 }).catch(async () => pb.collection('removal_estimate_usage').getFirstListItem(`usageDate = "${usageDate}"`));
+  if (Number(record.attempts || 0) >= COST_MAX_ATTEMPTS_PER_DAY) return false;
+  await pb.collection('removal_estimate_usage').update(record.id, { attempts: Number(record.attempts || 0) + 1 });
+  return true;
+}
+let estimateWorkerBusy = false;
+async function processOneEstimateJob() {
+  if (estimateWorkerBusy) return;
+  estimateWorkerBusy = true;
+  try {
+    const now = Date.now();
+    const queued = await pb.collection('removal_estimate_jobs').getFullList({ filter: 'status = "queued"', sort: 'nextAttemptAt', perPage: 100 }).catch(() => []);
+    const job = queued.find((item) => !item.nextAttemptAt || Date.parse(item.nextAttemptAt) <= now);
+    if (!job) return;
+    const leaseUntil = new Date(now + COST_REQUEST_TIMEOUT_MS + 10_000).toISOString();
+    const attemptNumber = Number(job.attempts || 0) + 1;
+    const leased = await pb.collection('removal_estimate_jobs').update(job.id, { status: 'leased', leaseUntil, attempts: attemptNumber, attemptedAt: new Date(now).toISOString() }).catch(() => null);
+    if (!leased) return;
+    const report = await pb.collection('reports').getOne(job.report).catch(() => null);
+    if (!report || currentVersion(report) !== Number(job.inputVersion) || report.reviewStatus !== 'verified') {
+      await pb.collection('removal_estimate_jobs').update(job.id, { status: 'superseded', leaseUntil: '' }).catch(() => {});
+      return;
+    }
+    const eligibility = estimateEligibility(report);
+    if (eligibility.status) {
+      await pb.collection('reports').update(report.id, { estimateStatus: eligibility.status, estimateReason: eligibility.reason }).catch(() => {});
+      await pb.collection('removal_estimate_jobs').update(job.id, { status: 'superseded', leaseUntil: '' }).catch(() => {});
+      return;
+    }
+    const hasBudget = await bumpDailyUsage();
+    if (!hasBudget) {
+      await pb.collection('reports').update(report.id, { estimateStatus: 'unavailable', estimateReason: 'daily_cap' });
+      await pb.collection('removal_estimate_jobs').update(job.id, { status: 'failed', leaseUntil: '', diagnostic: 'daily_cap' });
+      return;
+    }
+    try {
+      const estimate = await requestGroundedEstimate(report);
+      const latest = await pb.collection('reports').getOne(report.id).catch(() => null);
+      if (!latest || currentVersion(latest) !== Number(job.inputVersion) || latest.reviewStatus !== 'verified' || estimateEligibility(latest).status) {
+        await pb.collection('removal_estimate_jobs').update(job.id, { status: 'superseded', leaseUntil: '' }).catch(() => {});
+        return;
+      }
+      await pb.collection('reports').update(report.id, estimate);
+      await pb.collection('removal_estimate_jobs').update(job.id, { status: 'succeeded', leaseUntil: '', nextAttemptAt: '', diagnostic: '' });
+    } catch (error) {
+      const terminal = Boolean(error.terminal) || attemptNumber >= 3;
+      if (!terminal) {
+        const delay = attemptNumber === 1 ? 60_000 : 300_000;
+        await pb.collection('removal_estimate_jobs').update(job.id, { status: 'queued', leaseUntil: '', nextAttemptAt: new Date(Date.now() + delay).toISOString(), diagnostic: safeReason(error) });
+      } else {
+        await pb.collection('reports').update(report.id, { estimateStatus: 'unavailable', estimateReason: safeReason(error) }).catch(() => {});
+        await pb.collection('removal_estimate_jobs').update(job.id, { status: 'failed', leaseUntil: '', nextAttemptAt: '', diagnostic: safeReason(error) });
+      }
+    }
+  } catch (error) {
+    console.error('Estimate worker error:', error?.message || error);
+  } finally { estimateWorkerBusy = false; }
+}
+async function recoverEstimateJobs() {
+  const jobs = await pb.collection('removal_estimate_jobs').getFullList({ filter: 'status = "leased"' }).catch(() => []);
+  for (const job of jobs) {
+    if (!job.leaseUntil || Date.parse(job.leaseUntil) <= Date.now()) {
+      const terminal = Number(job.attempts || 0) >= 3;
+      await pb.collection('removal_estimate_jobs').update(job.id, { status: terminal ? 'failed' : 'queued', leaseUntil: '', nextAttemptAt: terminal ? '' : new Date().toISOString(), diagnostic: 'worker_recovered_after_restart' }).catch(() => {});
+      if (terminal) await pb.collection('reports').update(job.report, { estimateStatus: 'unavailable', estimateReason: 'worker_retries_exhausted' }).catch(() => {});
+    }
+  }
+}
+
+app.get('/api/health', (_req, res) => res.json({ ok: true, accountSystem: true, catalogCount: catalog.length, geminiEnabled: Boolean(process.env.GEMINI_API_KEY), costEstimatorEnabled: Boolean(COST_API_KEY), costEstimatorModel: COST_GEMINI_MODEL }));
 app.get('/api/metrics', async (_req, res, next) => {
   try {
     const [reports, accounts] = await Promise.all([
@@ -563,6 +874,9 @@ app.post('/api/reports', upload.single('photo'), requireUser, async (req, res, n
       note: String(body.note || '').slice(0, 1200),
       latitude,
       longitude,
+      estimateStatus: 'not_requested', estimateReason: '', estimateInputVersion: 1,
+      estimateCounty: resolveFloridaCounty(latitude, longitude)?.name || '',
+      estimateCountyGeoid: resolveFloridaCounty(latitude, longitude)?.geoid || '',
       publicLatitude: exactLocationPublic ? latitude : roundCoordinate(latitude),
       publicLongitude: exactLocationPublic ? longitude : roundCoordinate(longitude),
       exactLocationPublic,
@@ -612,7 +926,11 @@ app.post('/api/reports/:id/review', requireReviewer, async (req, res, next) => {
     const reason = String(req.body?.reason || '').trim().slice(0, 500);
     if (!allowedStatuses.has(status)) return res.status(400).json({ error: 'Choose a supported review status.' });
     const speciesName = String(req.body?.speciesName || '').trim();
-    if (status === report.reviewStatus && !speciesName) return res.status(400).json({ error: 'Choose a status change or provide a corrected identification.' });
+    const hasCoverage = Object.hasOwn(req.body || {}, 'coverageAreaSqFt');
+    if (hasCoverage && req.reviewer.role !== 'moderator') return res.status(403).json({ error: 'Only a moderator can update coverage for estimates.' });
+    const requestedCoverage = hasCoverage ? (req.body.coverageAreaSqFt === null || req.body.coverageAreaSqFt === '' ? 0 : Number(req.body.coverageAreaSqFt)) : Number(report.coverageAreaSqFt || 0);
+    if (hasCoverage && requestedCoverage !== 0 && (!Number.isFinite(requestedCoverage) || requestedCoverage < 1 || requestedCoverage > COST_MAX_AREA_SQFT)) return res.status(400).json({ error: `Coverage must be between 1 and ${COST_MAX_AREA_SQFT.toLocaleString()} square feet.` });
+    if (status === report.reviewStatus && !speciesName && !hasCoverage) return res.status(400).json({ error: 'Choose a status change, provide a corrected identification, or update coverage.' });
     if (status !== report.reviewStatus && !allowedTransitions[report.reviewStatus]?.has(status)) return res.status(409).json({ error: `Cannot move a ${report.reviewStatus} report to ${status}.` });
     if (!reason) return res.status(400).json({ error: 'Add a public reason for this review action.' });
     const fields = { reviewStatus: status };
@@ -625,11 +943,96 @@ app.post('/api/reports/:id/review', requireReviewer, async (req, res, next) => {
       fields.listedCategory = match?.category || '';
       fields.isFiscListed = Boolean(match);
     }
+    if (hasCoverage) fields.coverageAreaSqFt = requestedCoverage;
+    const speciesChanged = Boolean(speciesName) && (speciesName !== report.speciesName || (scientificName && scientificName !== report.scientificName));
+    const coverageChanged = hasCoverage && requestedCoverage !== Number(report.coverageAreaSqFt || 0);
+    const statusChanged = status !== report.reviewStatus;
+    if (speciesChanged || coverageChanged || statusChanged) {
+      fields.estimateInputVersion = currentVersion(report) + 1;
+      fields.estimateStatus = status === 'verified' ? 'not_requested' : 'not_requested';
+      fields.estimateReason = status === 'verified' ? '' : 'not_verified';
+      fields.estimateLowUsd = 0; fields.estimateHighUsd = 0; fields.estimateMethod = ''; fields.estimateRationale = '';
+      fields.estimateAssumptions = ''; fields.estimateSources = []; fields.estimateGeneratedAt = '';
+    }
     const updated = await pb.collection('reports').update(report.id, fields);
+    if (speciesChanged || coverageChanged || statusChanged) await supersedeJobs(report.id);
+    let current = updated;
+    if (status === 'verified') {
+      const eligibility = estimateEligibility(updated);
+      if (eligibility.status) current = await pb.collection('reports').update(report.id, { estimateStatus: eligibility.status, estimateReason: eligibility.reason, estimateCounty: eligibility.county?.name || '', estimateCountyGeoid: eligibility.county?.geoid || '' });
+      else if (status !== report.reviewStatus && Number(updated.coverageAreaSqFt) > 0) {
+        try { current = await queueEstimate(updated); }
+        catch { current = await pb.collection('reports').update(report.id, { estimateStatus: 'unavailable', estimateReason: 'queue_failed' }).catch(() => updated); }
+      }
+      else if (coverageChanged || speciesChanged) current = await pb.collection('reports').update(report.id, { estimateStatus: 'not_requested', estimateReason: '' });
+    } else if (statusChanged) {
+      current = await pb.collection('reports').update(report.id, { estimateStatus: 'not_requested', estimateReason: 'not_verified' });
+    }
     await addActivity(report.id, { eventType: 'review_status_changed', actorRole: req.reviewer.role, publicReason: reason, fromStatus: report.reviewStatus, toStatus: status });
     if (speciesName && speciesName !== report.speciesName) await addActivity(report.id, { eventType: 'identification_corrected', actorRole: req.reviewer.role, publicReason: `Identification updated to ${speciesName}.`, fromStatus: status, toStatus: status });
-    const projected = await projectReport(updated, `http://${req.get('host')}`);
+    const projected = await projectReport(current, `http://${req.get('host')}`, { includePrivateLocation: true, includeReporter: true });
     res.json({ report: projected });
+  } catch (error) { next(error); }
+});
+
+app.post('/api/reports/:id/removal-estimate', requireModerator, async (req, res, next) => {
+  try {
+    const report = await pb.collection('reports').getOne(req.params.id);
+    if (report.reviewStatus !== 'verified') return res.status(409).json({ error: 'Only verified reports can receive estimates.' });
+    const action = String(req.body?.action || '');
+    if (!['request', 'retry', 'reassess'].includes(action)) return res.status(400).json({ error: 'Choose request, retry, or reassess.' });
+    const hasCoverage = Object.hasOwn(req.body || {}, 'coverageAreaSqFt');
+    if (action === 'reassess' && !hasCoverage) return res.status(400).json({ error: 'Confirm the remaining infested area before reassessment.' });
+    const coverage = hasCoverage ? Number(req.body.coverageAreaSqFt) : Number(report.coverageAreaSqFt || 0);
+    if (!Number.isFinite(coverage) || coverage < 1 || coverage > COST_MAX_AREA_SQFT) return res.status(400).json({ error: `Coverage must be between 1 and ${COST_MAX_AREA_SQFT.toLocaleString()} square feet.` });
+    if (action === 'retry' && currentEstimateStatus(report) !== 'unavailable') return res.status(409).json({ error: 'Only unavailable estimates can be retried.' });
+    if (action === 'reassess' && currentEstimateStatus(report) !== 'stale') return res.status(409).json({ error: 'This estimate does not need reassessment.' });
+    const changed = coverage !== Number(report.coverageAreaSqFt || 0);
+    if (changed || action === 'reassess') {
+      await supersedeJobs(report.id);
+      const updated = await pb.collection('reports').update(report.id, {
+        coverageAreaSqFt: coverage, estimateInputVersion: currentVersion(report) + 1,
+        estimateStatus: 'not_requested', estimateReason: '', estimateLowUsd: 0, estimateHighUsd: 0,
+        estimateMethod: '', estimateRationale: '', estimateAssumptions: '', estimateSources: [], estimateGeneratedAt: '',
+      });
+      const queued = await queueEstimate(updated, { force: true });
+      return res.status(202).json({ report: await projectReport(queued, `http://${req.get('host')}`, { includePrivateLocation: true, includeReporter: true }) });
+    }
+    if (action === 'request' && report.estimateStatus === 'pending') return res.status(202).json({ report: await projectReport(report, `http://${req.get('host')}`, { includePrivateLocation: true, includeReporter: true }) });
+    await supersedeJobs(report.id);
+    const queued = await queueEstimate(report, { force: true });
+    res.status(202).json({ report: await projectReport(queued, `http://${req.get('host')}`, { includePrivateLocation: true, includeReporter: true }) });
+  } catch (error) { next(error); }
+});
+
+app.patch('/api/reports/:id/location', requireModerator, async (req, res, next) => {
+  try {
+    const report = await pb.collection('reports').getOne(req.params.id);
+    const latitude = Number(req.body?.latitude); const longitude = Number(req.body?.longitude);
+    if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) return res.status(400).json({ error: 'Choose a valid map location.' });
+    if (latitude === Number(report.latitude) && longitude === Number(report.longitude)) return res.status(400).json({ error: 'Move the map pin before saving the location.' });
+    const county = resolveFloridaCounty(latitude, longitude);
+    await supersedeJobs(report.id);
+    const updated = await pb.collection('reports').update(report.id, {
+      latitude, longitude,
+      publicLatitude: report.exactLocationPublic ? latitude : roundCoordinate(latitude),
+      publicLongitude: report.exactLocationPublic ? longitude : roundCoordinate(longitude),
+      estimateInputVersion: currentVersion(report) + 1,
+      estimateStatus: 'not_requested', estimateReason: '', estimateLowUsd: 0, estimateHighUsd: 0,
+      estimateMethod: '', estimateRationale: '', estimateAssumptions: '', estimateSources: [], estimateGeneratedAt: '',
+      estimateCounty: county?.name || '', estimateCountyGeoid: county?.geoid || '',
+    });
+    let current = updated;
+    if (updated.reviewStatus === 'verified') {
+      const eligibility = estimateEligibility(updated);
+      if (eligibility.status) current = await pb.collection('reports').update(report.id, { estimateStatus: eligibility.status, estimateReason: eligibility.reason });
+      else if (Number(updated.coverageAreaSqFt) > 0) {
+        try { current = await queueEstimate(updated); }
+        catch { current = await pb.collection('reports').update(report.id, { estimateStatus: 'unavailable', estimateReason: 'queue_failed' }).catch(() => updated); }
+      }
+    }
+    await addActivity(report.id, { eventType: 'location_corrected', actorRole: req.reviewer.role, publicReason: 'Report location corrected by a moderator.' });
+    res.json({ report: await projectReport(current, `http://${req.get('host')}`, { includePrivateLocation: true, includeReporter: true }) });
   } catch (error) { next(error); }
 });
 
@@ -647,6 +1050,10 @@ app.post('/api/reports/:id/impact-events', upload.single('photo'), requireReview
     if (req.file) fields.photos = new File([await normalizeImage(req.file)], 'event-photo.jpg', { type: 'image/jpeg' });
     const event = await pb.collection('impact_events').create(fields);
     await addActivity(report.id, { eventType: 'impact_event_added', actorRole: req.reviewer.role, publicReason: `${eventType} recorded for ${eventDate}.` });
+    if (eventType === 'treatment' && report.reviewStatus === 'verified' && (report.estimateStatus === 'ready' || report.estimateStatus === 'pending' || report.estimateGeneratedAt)) {
+      await supersedeJobs(report.id);
+      await pb.collection('reports').update(report.id, { estimateStatus: 'stale', estimateReason: 'treatment_recorded', estimateInputVersion: currentVersion(report) + 1 });
+    }
     res.status(201).json({ event: { id: event.id, type: event.eventType, date: event.eventDate, note: event.note, actorRole: event.actorRole, photos: (event.photos || []).map((filename) => fileUrl(event, filename, `http://${req.get('host')}`, 'api/impact-files')) } });
   } catch (error) { next(error); }
 });
@@ -664,4 +1071,7 @@ app.use((error, _req, res, _next) => {
 });
 
 await setupDatabase();
+await recoverEstimateJobs();
 app.listen(PORT, '0.0.0.0', () => console.log(`InvAIsive Trace API listening on http://0.0.0.0:${PORT}`));
+setInterval(() => { void processOneEstimateJob(); }, 2_000).unref();
+setInterval(() => { void recoverEstimateJobs(); }, 30_000).unref();

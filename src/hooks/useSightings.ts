@@ -469,14 +469,36 @@ const scientificName = selectedSpecies?.scientificName || (!manualMode || manual
 
   };
 
-const reviewReport = async (reportOrId: Report | string, status: string, reason?: string, speciesName?: string, scientificName?: string) => {
+const reviewReport = async (reportOrId: Report | string, status: string, reason?: string, speciesName?: string, scientificName?: string, coverageAreaSqFt?: number) => {
     if (!authToken) throw new Error('Sign in as moderator to review reports.');
     const reportId = typeof reportOrId === 'string' ? reportOrId : reportOrId.id;
     const publicReason = reason?.trim() || (status === 'verified' ? 'Confirmed by the InvAIsive Trace community moderator.' : 'Flagged for additional review by the community moderator.');
-    const response = await fetch(`${API_URL}/api/reports/${encodeURIComponent(reportId)}/review`, { method: 'POST', headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ status, reason: publicReason, speciesName: speciesName?.trim() || undefined, scientificName: scientificName?.trim() || undefined }) });
+    const response = await fetch(`${API_URL}/api/reports/${encodeURIComponent(reportId)}/review`, { method: 'POST', headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ status, reason: publicReason, speciesName: speciesName?.trim() || undefined, scientificName: scientificName?.trim() || undefined, coverageAreaSqFt }) });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || 'Could not update report review.');
     await Promise.all([refreshReports(), refreshReviewReports(), refreshAccountData(authToken, authUser?.role), refreshCommunityMetrics()]);
+  };
+
+const removalEstimateAction = async (reportId: string, action: 'request' | 'retry' | 'reassess', coverageAreaSqFt?: number) => {
+    if (!authToken) throw new Error('Sign in as a moderator to manage removal estimates.');
+    const response = await fetch(`${API_URL}/api/reports/${encodeURIComponent(reportId)}/removal-estimate`, {
+      method: 'POST', headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, coverageAreaSqFt }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || 'Could not update the removal estimate.');
+    await Promise.all([refreshReports(), refreshReviewReports(), refreshCommunityMetrics()]);
+  };
+
+const correctReportLocation = async (reportId: string, point: Coordinate) => {
+    if (!authToken) throw new Error('Sign in as a moderator to correct report locations.');
+    const response = await fetch(`${API_URL}/api/reports/${encodeURIComponent(reportId)}/location`, {
+      method: 'PATCH', headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(point),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || 'Could not correct the report location.');
+    await Promise.all([refreshReports(), refreshReviewReports()]);
   };
 
 const addImpactEvent = async (reportId: string, type: string, date: string, noteText: string, eventPhoto?: ImagePicker.ImagePickerAsset) => {
@@ -516,6 +538,6 @@ const reportCountLabel = `${reports.length} ${reports.length === 1 ? 'sighting' 
 
 
 
-return {tab,setTab,reports,apiOnline,photo,setPhoto,supportingPhotos,setSupportingPhotos,guess,setGuess,guessMessage,isIdentifying,selectedSpecies,setSelectedSpecies,manualName,setManualName,manualMode,setManualMode,search,setSearch,note,setNote,exactLocationPublic,setExactLocationPublic,location,setLocation:setSightingLocation,locationLabel,locationMessage,setLocationMessage,isSubmitting,refreshReports,refreshCommunityMetrics,communityMetrics,communityTrends,trendsLoading,trendsError,refreshCommunityTrends,filteredSpecies,choosePhoto,identifyPhoto,setCurrentLocation,submitReport,activeCenter,reportCountLabel,authToken,authUser,authMode,setAuthMode,authName,setAuthName,authEmail,setAuthEmail,authPassword,setAuthPassword,authBusy,authenticate,signOut,userMetrics,moderatorMetrics,refreshAccountData,reviewReports,moderationQueue:reviewReports,reviewBusy,setReviewBusy,refreshReviewReports,setLeaderboardVisibility,reviewReport,addImpactEvent,deleteReport,pickEventPhoto};
+return {tab,setTab,reports,apiOnline,photo,setPhoto,supportingPhotos,setSupportingPhotos,guess,setGuess,guessMessage,isIdentifying,selectedSpecies,setSelectedSpecies,manualName,setManualName,manualMode,setManualMode,search,setSearch,note,setNote,exactLocationPublic,setExactLocationPublic,location,setLocation:setSightingLocation,locationLabel,locationMessage,setLocationMessage,isSubmitting,refreshReports,refreshCommunityMetrics,communityMetrics,communityTrends,trendsLoading,trendsError,refreshCommunityTrends,filteredSpecies,choosePhoto,identifyPhoto,setCurrentLocation,submitReport,activeCenter,reportCountLabel,authToken,authUser,authMode,setAuthMode,authName,setAuthName,authEmail,setAuthEmail,authPassword,setAuthPassword,authBusy,authenticate,signOut,userMetrics,moderatorMetrics,refreshAccountData,reviewReports,moderationQueue:reviewReports,reviewBusy,setReviewBusy,refreshReviewReports,setLeaderboardVisibility,reviewReport,removalEstimateAction,correctReportLocation,addImpactEvent,deleteReport,pickEventPhoto};
 }
 export type SightingsVM = ReturnType<typeof useSightings>;

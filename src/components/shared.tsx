@@ -9,6 +9,13 @@ export type Species = (typeof catalogJson)[number];
 export type ReportPhoto = { id: string; url: string; isPrimary: boolean; position: number };
 export type ReportActivity = { id: string; type: string; actorRole: string; publicReason?: string; fromStatus?: string; toStatus?: string; occurredAt: string };
 export type ImpactEvent = { id: string; type: 'inspection' | 'treatment' | 'follow-up'; date: string; note: string; actorRole: string; photos: string[] };
+export type RemovalEstimateStatus = 'not_requested' | 'ineligible' | 'coverage_needed' | 'pending' | 'ready' | 'unavailable' | 'stale';
+export type RemovalEstimate = {
+  status: RemovalEstimateStatus; areaSqFt?: number; lowUsd?: number; highUsd?: number;
+  method?: string; rationale?: string; assumptions?: string; scope?: string; exclusions?: string;
+  sources?: { title: string; url: string; publishedAt: string; pricingGeography?: string; quotedPrice: number; quotedUnit: 'sq_ft' | 'acre'; ratePerSqFt: number; includes: string[]; evidence: string }[];
+  generatedAt?: string;
+};
 export type Report = {
   id: string; speciesName: string; scientificName?: string; isFiscListed: boolean;
   listedCategory?: string; sourceUrl?: string | null; geminiSuggestion?: string;
@@ -17,6 +24,8 @@ export type Report = {
   photos?: ReportPhoto[]; activity?: ReportActivity[]; impactEvents?: ImpactEvent[];
   reporter?: { id: string | null; displayName: string };
   locationLabel?: string;
+  coverageAreaSqFt?: number; estimateStatus?: RemovalEstimateStatus; estimateReason?: string;
+  estimateCounty?: string | null; removalEstimate?: RemovalEstimate | null;
 };
 export function summarizeImpact(reports: Report[]) {
   const events = reports.flatMap((report) => report.impactEvents || []);
