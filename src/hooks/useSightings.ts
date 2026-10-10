@@ -5,26 +5,37 @@ import * as Location from 'expo-location';
 import { Alert, Linking } from 'react-native';
 import { Species, Report, PlantGuess, Coordinate, catalog, API_URL, ORLANDO, findInCatalog, uploadPhoto } from '../components/shared';
 
+type CommunityMetrics = {
+  summary: { reportsSubmitted: number; confirmedReports: number; awaitingReview: number };
+  topSpecies: { name: string; scientificName: string; category: string | null; count: number }[];
+  topLocations: { name: string; count: number }[];
+  leaderboard: { rank: number; name: string; reportsSubmitted: number; confirmedReports: number; title: string }[];
+};
 export function useSightings() {
 
 
-const [tab, setTab] = useState<'home' | 'map' | 'sightings' | 'report' | 'account'>('home');
+const [tab, setTab] = useState<'home' | 'map' | 'sightings' | 'report' | 'account' | 'metrics' | 'review'>('home');
 
 const [reports, setReports] = useState<Report[]>([]);
 
 const [apiOnline, setApiOnline] = useState(false);
 
 const [authToken, setAuthToken] = useState<string | null>(null);
-const [authUser, setAuthUser] = useState<{ id: string; email: string; displayName: string; role: 'user' | 'moderator' } | null>(null);
+const [authUser, setAuthUser] = useState<{ id: string; email: string; displayName: string; role: 'user' | 'moderator'; leaderboardVisible: boolean } | null>(null);
 const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
 const [authName, setAuthName] = useState('');
 const [authEmail, setAuthEmail] = useState('');
 const [authPassword, setAuthPassword] = useState('');
 const [authBusy, setAuthBusy] = useState(false);
 const [userMetrics, setUserMetrics] = useState<{ reportsSubmitted: number; verifiedReports: number; awaitingReview: number; impactEventsRecorded: number } | null>(null);
-const [moderatorMetrics, setModeratorMetrics] = useState<{ metrics: { registeredUsers: number; reportsSubmitted: number; verifiedReports: number; awaitingReview: number }; contributors: { id: string; displayName: string; email: string; reportsSubmitted: number; verifiedReports: number; awaitingReview: number; lastReportAt?: string }[] } | null>(null);
+const [moderatorMetrics, setModeratorMetrics] = useState<{ metrics: { registeredUsers: number; reportsSubmitted: number; verifiedReports: number; awaitingReview: number; inspections?: number; treatments?: number; followUps?: number }; contributors: { id: string; displayName: string; email: string; reportsSubmitted: number; verifiedReports: number; awaitingReview: number; lastReportAt?: string }[] } | null>(null);
+const [reviewReports, setReviewReports] = useState<Report[]>([]);
+const [reviewBusy, setReviewBusy] = useState(false);
+const [communityMetrics, setCommunityMetrics] = useState<CommunityMetrics | null>(null);
+const [locationLabel, setLocationLabel] = useState('');
 
 const [photo, setPhoto] = useState<ImagePicker.ImagePickerAsset | null>(null);
+const [supportingPhotos, setSupportingPhotos] = useState<ImagePicker.ImagePickerAsset[]>([]);
 
 const [guess, setGuess] = useState<PlantGuess | null>(null);
 
@@ -70,9 +81,22 @@ const payload = await response.json();
 
   };
 
+const refreshCommunityMetrics = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/metrics`);
+      if (!response.ok) throw new Error('Metrics unavailable');
+      setCommunityMetrics(await response.json());
+    } catch { setCommunityMetrics(null); }
+  };
 
-
-  useEffect(() => { void refreshReports(); }, []);
+  useEffect(() => { void refreshReports(); void refreshCommunityMetrics(); }, []);
+const refreshReviewReports = async (token = authToken) => {
+    if (!token) return;
+    const response = await fetch(`${API_URL}/api/moderation/reports`, { headers: { Authorization: `Bearer ${token}` } });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || 'Could not load the review queue.');
+    setReviewReports(payload.reports || []);
+  };
 
 const refreshAccountData = async (token = authToken, role = authUser?.role) => {
     if (!token) return;
@@ -86,8 +110,15 @@ const refreshAccountData = async (token = authToken, role = authUser?.role) => {
       catch { throw new Error(`The API returned a non-JSON response (HTTP ${response.status}). Restart the updated backend and try again.`); }
       setUserMetrics(payload.metrics);
       if (role === 'moderator') {
-        const adminResponse = await fetch(`${API_URL}/api/moderation/metrics`, { headers });
+        const [adminResponse, queueResponse] = await Promise.all([
+          fetch(`${API_URL}/api/moderation/metrics`, { headers }),
+          fetch(`${API_URL}/api/moderation/reports`, { headers }),
+        ]);
         if (adminResponse.ok) setModeratorMetrics(await adminResponse.json());
+        if (queueResponse.ok) {
+          const queuePayload = await queueResponse.json();
+          setReviewReports(queuePayload.reports || []);
+        }
       }
     } catch (error) { console.warn('Account metrics unavailable:', error); }
   };
@@ -109,7 +140,10 @@ const authenticate = async () => {
       setAuthUser(payload.user);
       setAuthPassword('');
       setModeratorMetrics(null);
+      setReviewReports([]);
       await refreshAccountData(payload.token, payload.user.role);
+      await refreshCommunityMetrics();
+      if (payload.user.role === 'moderator') await refreshReviewReports(payload.token);
     } catch (error) {
       Alert.alert(authMode === 'signup' ? 'Could not create account' : 'Could not sign in', error instanceof Error ? error.message : 'Check the API connection and try again.');
     } finally { setAuthBusy(false); }
@@ -118,10 +152,24 @@ const authenticate = async () => {
 const signOut = async () => {
     const token = authToken;
     try { if (token) await fetch(`${API_URL}/api/auth/logout`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } }); } catch { /* Sign out locally even if the API is offline. */ }
-    setAuthToken(null); setAuthUser(null); setUserMetrics(null); setModeratorMetrics(null); setAuthPassword('');
+    setAuthToken(null); setAuthUser(null); setUserMetrics(null); setModeratorMetrics(null); setReviewReports([]); setAuthPassword(''); setTab('home');
   };
 
-
+const setLeaderboardVisibility = async (visible: boolean) => {
+    if (!authToken || !authUser) return;
+    try {
+      const response = await fetch(`${API_URL}/api/account/leaderboard-visibility`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+        body: JSON.stringify({ visible }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || 'Could not update leaderboard visibility.');
+      setAuthUser({ ...authUser, leaderboardVisible: payload.leaderboardVisible });
+      await refreshCommunityMetrics();
+    } catch (error) {
+      Alert.alert('Could not update setting', error instanceof Error ? error.message : 'Try again when the API is online.');
+    }
+  };
 
 const filteredSpecies = useMemo(() => {
 
@@ -134,8 +182,21 @@ const query = search.trim().toLocaleLowerCase();
   }, [search]);
 
 
+const setSightingLocation = async (point: Coordinate) => {
+    setLocation(point);
+    setLocationLabel('Orange County, FL');
+    try {
+      const addresses = await Location.reverseGeocodeAsync(point);
+      const place = addresses[0];
+      const locality = place?.city || place?.subregion || place?.district;
+      const region = place?.region === 'Florida' ? 'FL' : place?.region;
+      setLocationLabel([locality || 'Orange County', region || 'FL'].join(', '));
+    } catch { /* Keep the broad county fallback if reverse geocoding is unavailable. */ }
+  };
 
-const choosePhoto = async (useCamera: boolean) => {
+
+
+const choosePhoto = async (useCamera: boolean, supporting = false) => {
 
     try {
 
@@ -197,11 +258,17 @@ const asset = result.assets?.[0];
 
       }
 
-      setPhoto(asset);
+      if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) {
+        Alert.alert('Photo is too large', 'Each report photo must be 5 MB or smaller. Choose a smaller image and try again.');
+        return;
+      }
 
-      setGuess(null);
-
-      setGuessMessage('Photo ready. Ask Gemini for a tentative plant identification, or identify it manually.');
+      if (supporting) setSupportingPhotos((current) => current.length < 3 ? [...current, asset] : current);
+      else {
+        setPhoto(asset);
+        setGuess(null);
+        setGuessMessage('Photo ready. Ask Gemini for a tentative plant identification, or identify it manually.');
+      }
 
     } catch (error) {
 
@@ -297,7 +364,7 @@ const current = await Location.getCurrentPositionAsync({ accuracy: Location.Accu
 
 const point = { latitude: current.coords.latitude, longitude: current.coords.longitude };
 
-      setLocation(point);
+      await setSightingLocation(point);
 
       setLocationMessage('Location found. Tap the map to adjust the pin if needed.');
 
@@ -310,8 +377,6 @@ const point = { latitude: current.coords.latitude, longitude: current.coords.lon
     }
 
   };
-
-
 
 const submitReport = async () => {
 
@@ -331,7 +396,7 @@ const scientificName = selectedSpecies?.scientificName || (!manualMode || manual
 
       if (!authToken) { setTab('account'); throw new Error('Create an account or sign in before submitting a sighting.'); }
 
-      await uploadPhoto('/api/reports', photo, {
+      const created = await uploadPhoto<{ report: Report }>('/api/reports', photo, {
 
         speciesName,
 
@@ -345,18 +410,27 @@ const scientificName = selectedSpecies?.scientificName || (!manualMode || manual
 
         observedAt: new Date().toISOString(),
 
+        locationLabel: locationLabel || 'Orange County, FL',
+
         note,
 
         exactLocationPublic: String(exactLocationPublic),
 
       }, authToken);
 
+      let supportingUploadError = '';
+      for (const supportingPhoto of supportingPhotos) {
+        try { await uploadPhoto(`/api/reports/${created.report.id}/photos`, supportingPhoto, {}, authToken); }
+        catch (error) { supportingUploadError = error instanceof Error ? error.message : 'A supporting photo could not be uploaded.'; break; }
+      }
+
       await refreshReports();
+      await refreshCommunityMetrics();
       await refreshAccountData(authToken, authUser?.role);
 
-      setPhoto(null); setGuess(null); setSelectedSpecies(null); setManualName(''); setManualMode(false); setSearch(''); setNote(''); setLocation(null); setExactLocationPublic(false); setTab('home');
+      setPhoto(null); setSupportingPhotos([]); setGuess(null); setSelectedSpecies(null); setManualName(''); setManualMode(false); setSearch(''); setNote(''); setLocation(null); setLocationLabel(''); setExactLocationPublic(false); setTab('home');
 
-      Alert.alert('Report submitted', 'Your sighting is on the community map as unverified and can now be reviewed.');
+      Alert.alert(supportingUploadError ? 'Report submitted with photo issue' : 'Report submitted', supportingUploadError ? `The report is saved, but a supporting photo could not be uploaded: ${supportingUploadError}` : 'Your sighting is on the community map as unverified and can now be reviewed.');
 
     } catch (error) {
 
@@ -364,6 +438,44 @@ const scientificName = selectedSpecies?.scientificName || (!manualMode || manual
 
     } finally { setIsSubmitting(false); }
 
+  };
+
+const reviewReport = async (reportOrId: Report | string, status: string, reason?: string, speciesName?: string, scientificName?: string) => {
+    if (!authToken) throw new Error('Sign in as moderator to review reports.');
+    const reportId = typeof reportOrId === 'string' ? reportOrId : reportOrId.id;
+    const publicReason = reason?.trim() || (status === 'verified' ? 'Confirmed by the Spot the Spread community moderator.' : 'Flagged for additional review by the community moderator.');
+    const response = await fetch(`${API_URL}/api/reports/${encodeURIComponent(reportId)}/review`, { method: 'POST', headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ status, reason: publicReason, speciesName: speciesName?.trim() || undefined, scientificName: scientificName?.trim() || undefined }) });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || 'Could not update report review.');
+    await Promise.all([refreshReports(), refreshReviewReports(), refreshAccountData(authToken, authUser?.role), refreshCommunityMetrics()]);
+  };
+
+const addImpactEvent = async (reportId: string, type: string, date: string, noteText: string, eventPhoto?: ImagePicker.ImagePickerAsset) => {
+    if (!authToken) throw new Error('Sign in as moderator to record an event.');
+    if (eventPhoto) await uploadPhoto(`/api/reports/${reportId}/impact-events`, eventPhoto, { type, date, note: noteText }, authToken);
+    else {
+      const response = await fetch(`${API_URL}/api/reports/${reportId}/impact-events`, { method: 'POST', headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ type, date, note: noteText }) });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || 'Could not record the event.');
+    }
+    await Promise.all([refreshReports(), refreshReviewReports(), refreshAccountData(authToken, authUser?.role), refreshCommunityMetrics()]);
+  };
+
+const deleteReport = async (reportId: string) => {
+    if (!authToken) throw new Error('Sign in as moderator to delete reports.');
+    const response = await fetch(`${API_URL}/api/reports/${reportId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${authToken}` } });
+    if (!response.ok) { const payload = await response.json().catch(() => ({})); throw new Error(payload.error || 'Could not delete report.'); }
+    await Promise.all([refreshReports(), refreshReviewReports(), refreshAccountData(authToken, authUser?.role), refreshCommunityMetrics()]);
+  };
+
+const pickEventPhoto = async (): Promise<ImagePicker.ImagePickerAsset | null> => {
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.82 });
+    const asset = result.canceled ? null : result.assets?.[0] || null;
+    if (asset?.fileSize && asset.fileSize > 5 * 1024 * 1024) {
+      Alert.alert('Photo is too large', 'Event photos must be 5 MB or smaller. Choose a smaller image and try again.');
+      return null;
+    }
+    return asset;
   };
 
 
@@ -375,6 +487,6 @@ const reportCountLabel = `${reports.length} ${reports.length === 1 ? 'sighting' 
 
 
 
-return {tab,setTab,reports,apiOnline,photo,setPhoto,guess,setGuess,guessMessage,isIdentifying,selectedSpecies,setSelectedSpecies,manualName,setManualName,manualMode,setManualMode,search,setSearch,note,setNote,exactLocationPublic,setExactLocationPublic,location,setLocation,locationMessage,setLocationMessage,isSubmitting,refreshReports,filteredSpecies,choosePhoto,identifyPhoto,setCurrentLocation,submitReport,activeCenter,reportCountLabel,authToken,authUser,authMode,setAuthMode,authName,setAuthName,authEmail,setAuthEmail,authPassword,setAuthPassword,authBusy,authenticate,signOut,userMetrics,moderatorMetrics,refreshAccountData};
+return {tab,setTab,reports,apiOnline,photo,setPhoto,supportingPhotos,setSupportingPhotos,guess,setGuess,guessMessage,isIdentifying,selectedSpecies,setSelectedSpecies,manualName,setManualName,manualMode,setManualMode,search,setSearch,note,setNote,exactLocationPublic,setExactLocationPublic,location,setLocation:setSightingLocation,locationLabel,locationMessage,setLocationMessage,isSubmitting,refreshReports,refreshCommunityMetrics,communityMetrics,filteredSpecies,choosePhoto,identifyPhoto,setCurrentLocation,submitReport,activeCenter,reportCountLabel,authToken,authUser,authMode,setAuthMode,authName,setAuthName,authEmail,setAuthEmail,authPassword,setAuthPassword,authBusy,authenticate,signOut,userMetrics,moderatorMetrics,refreshAccountData,reviewReports,moderationQueue:reviewReports,reviewBusy,setReviewBusy,refreshReviewReports,setLeaderboardVisibility,reviewReport,addImpactEvent,deleteReport,pickEventPhoto};
 }
 export type SightingsVM = ReturnType<typeof useSightings>;

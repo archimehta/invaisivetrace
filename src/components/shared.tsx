@@ -6,15 +6,27 @@ import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import catalogJson from '../../data/fisc-species.json';
 export type Species = (typeof catalogJson)[number];
 
+export type ReportPhoto = { id: string; url: string; isPrimary: boolean; position: number };
+export type ReportActivity = { id: string; type: string; actorRole: string; publicReason?: string; fromStatus?: string; toStatus?: string; occurredAt: string };
+export type ImpactEvent = { id: string; type: 'inspection' | 'treatment' | 'follow-up'; date: string; note: string; actorRole: string; photos: string[] };
 export type Report = {
-
   id: string; speciesName: string; scientificName?: string; isFiscListed: boolean;
-
-  listedCategory?: string; observedAt: string; note?: string; latitude: number; longitude: number;
-
+  listedCategory?: string; sourceUrl?: string | null; geminiSuggestion?: string;
+  observedAt: string; created?: string; note?: string; latitude: number; longitude: number;
   exactLocationPublic: boolean; reviewStatus: string; photoUrl?: string | null;
-
+  photos?: ReportPhoto[]; activity?: ReportActivity[]; impactEvents?: ImpactEvent[];
+  reporter?: { id: string | null; displayName: string };
+  locationLabel?: string;
 };
+export function summarizeImpact(reports: Report[]) {
+  const events = reports.flatMap((report) => report.impactEvents || []);
+  return {
+    verified: reports.filter((report) => report.reviewStatus === 'verified').length,
+    inspections: events.filter((event) => event.type === 'inspection').length,
+    treatments: events.filter((event) => event.type === 'treatment').length,
+    followUps: events.filter((event) => event.type === 'follow-up').length,
+  };
+}
 
 export type PlantGuess = { isPlant?: boolean; commonName?: string; scientificName?: string; alternatives?: string[]; confidence?: string; rationale?: string; fiscMatch?: { id: string; category: string } | null };
 
@@ -29,6 +41,14 @@ export const API_URL = (process.env.EXPO_PUBLIC_API_URL || 'http://127.0.0.1:878
 export const ORLANDO: Coordinate = { latitude: 28.5383, longitude: -81.3792 };
 
 export const colors = { ink: '#17372A', muted: '#728075', green: '#244B36', pale: '#E5EDE3', lime: '#DDE6D2', paper: '#FAF9F5', white: '#FFFFFF', border: '#E5E8DF', amber: '#8B5A12', amberPale: '#FFF4DB', red: '#9B443C' };
+
+export function contributorTitle(confirmedReports: number) {
+  if (confirmedReports >= 20) return { name: 'Charles Darwin', next: null as null | { name: string; count: number } };
+  if (confirmedReports >= 10) return { name: 'Tree Hugger', next: { name: 'Charles Darwin', count: 20 } };
+  if (confirmedReports >= 5) return { name: 'Plant Purveyor', next: { name: 'Tree Hugger', count: 10 } };
+  if (confirmedReports >= 1) return { name: 'Nature Novice', next: { name: 'Plant Purveyor', count: 5 } };
+  return { name: 'First confirmation awaits', next: { name: 'Nature Novice', count: 1 } };
+}
 
 
 

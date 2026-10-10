@@ -1,11 +1,12 @@
 import React from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import { ActionButton, colors, styles } from '../components/shared';
+import { ActionButton, colors, styles, summarizeImpact } from '../components/shared';
 import { SightingsVM } from '../hooks/useSightings';
 
 export function HomeScreen({vm}:{vm:SightingsVM}) {
  const {reports,setTab}=vm;
  const verified=reports.filter(report=>report.reviewStatus==='verified').length;
+ const impact=summarizeImpact(reports);
  return <ScrollView contentContainerStyle={[styles.content,{paddingTop:0,paddingBottom:34}]}>
   <View style={{backgroundColor:'#183E2E',marginHorizontal:-20,paddingHorizontal:23,paddingTop:29,paddingBottom:25,borderBottomLeftRadius:30,borderBottomRightRadius:30}}>
    <Text style={{fontSize:11,color:'#C9DDBE',fontWeight:'800',letterSpacing:1.8}}>SPOT THE SPREAD · ORANGE COUNTY</Text>
@@ -18,6 +19,7 @@ export function HomeScreen({vm}:{vm:SightingsVM}) {
    <View style={{flex:1,backgroundColor:'#E8EEE5',borderRadius:17,padding:14}}><Text style={{fontSize:24,color:colors.green,fontWeight:'800'}}>{reports.length}</Text><Text style={{fontSize:11,color:colors.muted,marginTop:4}}>community sightings</Text></View>
    <View style={{flex:1,backgroundColor:'#F5EEDF',borderRadius:17,padding:14}}><Text style={{fontSize:24,color:'#8B5A12',fontWeight:'800'}}>{verified}</Text><Text style={{fontSize:11,color:colors.muted,marginTop:4}}>reviewed by moderators</Text></View>
   </View>
+  <View style={{marginTop:10,backgroundColor:colors.white,borderRadius:17,borderWidth:1,borderColor:colors.border,padding:14}}><Text style={{fontSize:13,color:colors.ink,fontWeight:'800'}}>Recorded fieldwork</Text><Text style={{fontSize:10,color:colors.muted,marginTop:3}}>Follow-up records describe observations; they do not claim eradication.</Text><View style={{flexDirection:'row',gap:6,marginTop:11}}>{[['Verified sightings',impact.verified],['Inspections',impact.inspections],['Treatments',impact.treatments],['Follow-ups',impact.followUps]].map(([label,value])=><View key={String(label)} style={{flex:1,backgroundColor:'#F1F3EC',borderRadius:10,padding:8}}><Text style={{fontSize:17,color:colors.green,fontWeight:'900'}}>{value}</Text><Text style={{fontSize:8,color:colors.muted,marginTop:3}}>{label}</Text></View>)}</View></View>
 
   <View style={{marginTop:25}}><Text style={styles.eyebrow}>WHY IT MATTERS</Text><Text style={{fontSize:22,lineHeight:28,color:colors.ink,fontWeight:'700',fontFamily:'Georgia'}}>Local knowledge can make a difference.</Text><Text style={{fontSize:13,lineHeight:20,color:colors.muted,marginTop:8}}>Invasive plants can spread quickly and disrupt the places people and wildlife depend on. A photo and a rough location turn an individual observation into useful community awareness.</Text></View>
 
