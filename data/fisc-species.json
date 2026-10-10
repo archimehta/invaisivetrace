@@ -1,0 +1,3377 @@
+[
+  {
+    "id": "abrus-precatorius",
+    "scientificName": "Abrus precatorius",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "rosary pea"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "acacia-auriculiformis",
+    "scientificName": "Acacia auriculiformis",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "earleaf acacia"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "adenanthera-pavonina",
+    "scientificName": "Adenanthera pavonina",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "red beadtree",
+      "red sandalwood"
+    ],
+    "zones": [
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "agave-sisalana",
+    "scientificName": "Agave sisalana",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "sisal hemp"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "albizia-julibrissin",
+    "scientificName": "Albizia julibrissin",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "silktree",
+      "mimosa"
+    ],
+    "zones": [
+      "N",
+      "C"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "albizia-lebbeck",
+    "scientificName": "Albizia lebbeck",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "woman's tongue"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "alstonia-macrophylla",
+    "scientificName": "Alstonia macrophylla",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "deviltree"
+    ],
+    "zones": [
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "alternanthera-philoxeroides",
+    "scientificName": "Alternanthera philoxeroides",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "alligatorweed"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "antigonon-leptopus",
+    "scientificName": "Antigonon leptopus",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "coral vine",
+      "queen's jewels"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "ardisia-crenata",
+    "scientificName": "Ardisia crenata",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "coral ardisia",
+      "scratchthroat"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "ardisia-elliptica",
+    "scientificName": "Ardisia elliptica",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "shoebutton ardisia"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "ardisia-japonica",
+    "scientificName": "Ardisia japonica",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Japanese ardisia"
+    ],
+    "zones": [
+      "N"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "aristolochia-elegans",
+    "scientificName": "Aristolochia elegans",
+    "scientificSynonyms": [
+      "Aristolochia littoralis"
+    ],
+    "commonNames": [
+      "elegant dutchman's-pipe",
+      "calico flower"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "asclepias-curassavica",
+    "scientificName": "Asclepias curassavica",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "tropical milkweed"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "asparagus-aethiopicus",
+    "scientificName": "Asparagus aethiopicus",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Sprenger's asparagus-fern"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "asystasia-gangetica",
+    "scientificName": "Asystasia gangetica",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Chinese violet",
+      "Ganges primrose"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "bauhinia-variegata",
+    "scientificName": "Bauhinia variegata",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "orchid tree",
+      "mountain ebony"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "begonia-cucullata",
+    "scientificName": "Begonia cucullata",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "wax begonia",
+      "club begonia"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "bischofia-javanica",
+    "scientificName": "Bischofia javanica",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Javanese bishopwood"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "broussonetia-papyrifera",
+    "scientificName": "Broussonetia papyrifera",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "paper mulberry"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "bruguiera-gymnorhiza",
+    "scientificName": "Bruguiera gymnorhiza",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "large-leafed orange mangrove"
+    ],
+    "zones": [
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "callisia-fragrans",
+    "scientificName": "Callisia fragrans",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "basket plant",
+      "inch plant"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "calophyllum-antillanum",
+    "scientificName": "Calophyllum antillanum",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "santa maria",
+      "galba",
+      "Antilles calophyllum"
+    ],
+    "zones": [
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "casuarina-cunninghamiana",
+    "scientificName": "Casuarina cunninghamiana",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "river sheoak"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "casuarina-equisetifolia",
+    "scientificName": "Casuarina equisetifolia",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Australian-pine",
+      "horsetail casuarina"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "casuarina-glauca",
+    "scientificName": "Casuarina glauca",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "gray sheoak",
+      "suckering Australian-pine"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "cecropia-palmata",
+    "scientificName": "Cecropia palmata",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "trumpet tree"
+    ],
+    "zones": [
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "cenchrus-polystachios",
+    "scientificName": "Cenchrus polystachios",
+    "scientificSynonyms": [
+      "Pennisetum polystachion"
+    ],
+    "commonNames": [
+      "West Indian pennisetum",
+      "missiongrass"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "cenchrus-purpureus",
+    "scientificName": "Cenchrus purpureus",
+    "scientificSynonyms": [
+      "Pennisetum purpureum"
+    ],
+    "commonNames": [
+      "elephantgrass",
+      "napiergrass"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "cenchrus-setaceus",
+    "scientificName": "Cenchrus setaceus",
+    "scientificSynonyms": [
+      "Pennisetum setaceum"
+    ],
+    "commonNames": [
+      "fountaingrass"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "cestrum-diurnum",
+    "scientificName": "Cestrum diurnum",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "dayflowering jessamine"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "chamaedorea-seifrizii",
+    "scientificName": "Chamaedorea seifrizii",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "bamboo palm"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "cinnamomum-camphora",
+    "scientificName": "Cinnamomum camphora",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "camphortree"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "clematis-terniflora",
+    "scientificName": "Clematis terniflora",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "sweet autumn virginsbower",
+      "sweet autumn clematis"
+    ],
+    "zones": [
+      "N",
+      "C"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "cocos-nucifera",
+    "scientificName": "Cocos nucifera",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "coconut palm"
+    ],
+    "zones": [
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "colocasia-esculenta",
+    "scientificName": "Colocasia esculenta",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "wild taro",
+      "dasheen",
+      "coco yam"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "colubrina-asiatica",
+    "scientificName": "Colubrina asiatica",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "latherleaf",
+      "Asian nakedwood"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "crassocephalum-crepidioides",
+    "scientificName": "Crassocephalum crepidioides",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "redflower ragleaf"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "cryptostegia-madagascariensis",
+    "scientificName": "Cryptostegia madagascariensis",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Madagascar rubbervine"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "cupaniopsis-anacardioides",
+    "scientificName": "Cupaniopsis anacardioides",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "carrotwood"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "cyperus-blepharoleptos",
+    "scientificName": "Cyperus blepharoleptos",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Cuban bulrush"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "cyperus-involucratus",
+    "scientificName": "Cyperus involucratus",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "umbrella plant"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "cyperus-prolifer",
+    "scientificName": "Cyperus prolifer",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "dwarf papyrus",
+      "miniature flatsedge"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "dactyloctenium-aegyptium",
+    "scientificName": "Dactyloctenium aegyptium",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Durban crowfootgrass"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "dalbergia-sissoo",
+    "scientificName": "Dalbergia sissoo",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Indian rosewood",
+      "sissoo"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "dalechampia-scandens",
+    "scientificName": "Dalechampia scandens",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "spurgecreeper"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "deparia-petersenii",
+    "scientificName": "Deparia petersenii",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Japanese false spleenwort"
+    ],
+    "zones": [
+      "N",
+      "C"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "dioscorea-alata",
+    "scientificName": "Dioscorea alata",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "white yam",
+      "winged yam",
+      "water yam"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "dioscorea-bulbifera",
+    "scientificName": "Dioscorea bulbifera",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "air-potato"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "distimake-tuberosus",
+    "scientificName": "Distimake tuberosus",
+    "scientificSynonyms": [
+      "Merremia tuberosa"
+    ],
+    "commonNames": [
+      "Spanish arborvine",
+      "yellow morning-glory",
+      "wood rose"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "dolichandra-unguis-cati",
+    "scientificName": "Dolichandra unguis-cati",
+    "scientificSynonyms": [
+      "Macfadyena unguis-cati"
+    ],
+    "commonNames": [
+      "catclaw vine"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "dracaena-hyacinthoides",
+    "scientificName": "Dracaena hyacinthoides",
+    "scientificSynonyms": [
+      "Sansevieria hyacinthoides"
+    ],
+    "commonNames": [
+      "bowstring hemp",
+      "mother-in-law's tongue"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "eichhornia-crassipes",
+    "scientificName": "Eichhornia crassipes",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "common water-hyacinth"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "elaeagnus-pungens",
+    "scientificName": "Elaeagnus pungens",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "silverthorn",
+      "thorny olive"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "elaeagnus-umbellata",
+    "scientificName": "Elaeagnus umbellata",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "silverberry",
+      "autumn olive"
+    ],
+    "zones": [
+      "N"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "epipremnum-pinnatum",
+    "scientificName": "Epipremnum pinnatum",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "golden pothos"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "eugenia-uniflora",
+    "scientificName": "Eugenia uniflora",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Surinam cherry"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "eulophia-graminea",
+    "scientificName": "Eulophia graminea",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Chinese crown orchid"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "ficus-altissima",
+    "scientificName": "Ficus altissima",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "council tree"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "ficus-microcarpa",
+    "scientificName": "Ficus microcarpa",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Indian laurel fig"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "flacourtia-indica",
+    "scientificName": "Flacourtia indica",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Governor's plum"
+    ],
+    "zones": [
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "hemarthria-altissima",
+    "scientificName": "Hemarthria altissima",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "limpograss"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "heptapleurum-actinophyllum",
+    "scientificName": "Heptapleurum actinophyllum",
+    "scientificSynonyms": [
+      "Schefflera actinophylla"
+    ],
+    "commonNames": [
+      "Australian umbrella tree",
+      "octopus tree"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "heteropterys-brachiata",
+    "scientificName": "Heteropterys brachiata",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Beechey's withe",
+      "redwing"
+    ],
+    "zones": [
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "heteropogon-contortus",
+    "scientificName": "Heteropogon contortus",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "tanglehead"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "heteropogon-melanocarpus",
+    "scientificName": "Heteropogon melanocarpus",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Sweet tanglehead"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "hydrilla-verticillata",
+    "scientificName": "Hydrilla verticillata",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "waterthyme",
+      "hydrilla"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "hygrophila-polysperma",
+    "scientificName": "Hygrophila polysperma",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Indian swampweed",
+      "green hygro"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "hymenachne-amplexicaulis",
+    "scientificName": "Hymenachne amplexicaulis",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "trompetilla",
+      "West Indian marshgrass"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "hyparrhenia-rufa",
+    "scientificName": "Hyparrhenia rufa",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "jaragua"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "imperata-cylindrica",
+    "scientificName": "Imperata cylindrica",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "cogongrass"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "ipomoea-aquatica",
+    "scientificName": "Ipomoea aquatica",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "water-spinach"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "ipomoea-carnea-subsp-fistulosa",
+    "scientificName": "Ipomoea carnea subsp. fistulosa",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "bush morning-glory"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "jasminum-dichotomum",
+    "scientificName": "Jasminum dichotomum",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Gold Coast jasmine"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "jasminum-fluminense",
+    "scientificName": "Jasminum fluminense",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Brazilian jasmine",
+      "jazmin de trapo",
+      "corky-stemmed jasmine"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "kalanchoe-pinnata",
+    "scientificName": "Kalanchoe pinnata",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "cathedral bells",
+      "life plant"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "kalanchoe-x-houghtonii",
+    "scientificName": "Kalanchoe x houghtonii",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "mother-of-millions"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "koelreuteria-elegans-subsp-formosana",
+    "scientificName": "Koelreuteria elegans subsp. formosana",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "flamegold rain tree"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "landoltia-punctata",
+    "scientificName": "Landoltia punctata",
+    "scientificSynonyms": [
+      "Spirodela punctata"
+    ],
+    "commonNames": [
+      "dotted duckweed"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "lantana-strigocamara",
+    "scientificName": "Lantana strigocamara",
+    "scientificSynonyms": [
+      "Lantana camara"
+    ],
+    "commonNames": [
+      "lantana",
+      "shrubverbena"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "leucaena-leucocephala",
+    "scientificName": "Leucaena leucocephala",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "white leadtree"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "ligustrum-lucidum",
+    "scientificName": "Ligustrum lucidum",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "glossy privet"
+    ],
+    "zones": [
+      "N",
+      "C"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "ligustrum-sinense",
+    "scientificName": "Ligustrum sinense",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Chinese privet"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "limnophila-sessiliflora",
+    "scientificName": "Limnophila sessiliflora",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Asian marshweed"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "livistona-chinensis",
+    "scientificName": "Livistona chinensis",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Chinese fan palm"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "lonicera-japonica",
+    "scientificName": "Lonicera japonica",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Japanese honeysuckle"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "ludwigia-peruviana",
+    "scientificName": "Ludwigia peruviana",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Peruvian primrosewillow"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "lumnitzera-racemosa",
+    "scientificName": "Lumnitzera racemosa",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "lumitzera"
+    ],
+    "zones": [
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "luziola-subintegra",
+    "scientificName": "Luziola subintegra",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Tropical American watergrass"
+    ],
+    "zones": [
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "lygodium-japonicum",
+    "scientificName": "Lygodium japonicum",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Japanese climbing fern"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "lygodium-microphyllum",
+    "scientificName": "Lygodium microphyllum",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "small-leaf climbing fern",
+      "Old World climbing fern"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "macroptilium-lathyroides",
+    "scientificName": "Macroptilium lathyroides",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "wild bushbean"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "manilkara-zapota",
+    "scientificName": "Manilkara zapota",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "sapodilla"
+    ],
+    "zones": [
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "melaleuca-quinquenervia",
+    "scientificName": "Melaleuca quinquenervia",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "punktree",
+      "melaleuca"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "melaleuca-viminalis",
+    "scientificName": "Melaleuca viminalis",
+    "scientificSynonyms": [
+      "Callistemon viminalis"
+    ],
+    "commonNames": [
+      "bottlebrush"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "melia-azedarach",
+    "scientificName": "Melia azedarach",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Chinaberrytree"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "melinis-minutiflora",
+    "scientificName": "Melinis minutiflora",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "molassesgrass"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "melinis-repens",
+    "scientificName": "Melinis repens",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "rose natalgrass"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "microsorum-grossum",
+    "scientificName": "Microsorum grossum",
+    "scientificSynonyms": [
+      "Phymatosorus scolopendria"
+    ],
+    "commonNames": [
+      "serpent fern",
+      "wart fern"
+    ],
+    "zones": [
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "microstegium-vimineum",
+    "scientificName": "Microstegium vimineum",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Nepalese browntop",
+      "Japanese stiltgrass"
+    ],
+    "zones": [
+      "N"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "mikania-micrantha",
+    "scientificName": "Mikania micrantha",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "mile-a-minute"
+    ],
+    "zones": [
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "mimosa-pigra",
+    "scientificName": "Mimosa pigra",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "black mimosa",
+      "catclaw mimosa"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "momordica-charantia",
+    "scientificName": "Momordica charantia",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "balsampear"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "murraya-paniculata",
+    "scientificName": "Murraya paniculata",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "orange jessamine"
+    ],
+    "zones": [
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "myriophyllum-spicatum",
+    "scientificName": "Myriophyllum spicatum",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Eurasian watermilfoil"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "nandina-domestica",
+    "scientificName": "Nandina domestica",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "sacred bamboo",
+      "heavenly bamboo"
+    ],
+    "zones": [
+      "N",
+      "C"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "nephrolepis-brownii",
+    "scientificName": "Nephrolepis brownii",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Asian sword fern"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "nephrolepis-cordifolia",
+    "scientificName": "Nephrolepis cordifolia",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "tuberous sword fern"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "neyraudia-reynaudiana",
+    "scientificName": "Neyraudia reynaudiana",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Burma reed",
+      "silkreed"
+    ],
+    "zones": [
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "noronhia-emarginata",
+    "scientificName": "Noronhia emarginata",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Madagascar olive"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "nymphoides-cristata",
+    "scientificName": "Nymphoides cristata",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "crested floatingheart"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "paederia-cruddasiana",
+    "scientificName": "Paederia cruddasiana",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "sewervine"
+    ],
+    "zones": [
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "paederia-foetida",
+    "scientificName": "Paederia foetida",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "skunkvine"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "panicum-repens",
+    "scientificName": "Panicum repens",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "torpedograss"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "passiflora-biflora",
+    "scientificName": "Passiflora biflora",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "twolobe passionflower"
+    ],
+    "zones": [
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "phoenix-reclinata",
+    "scientificName": "Phoenix reclinata",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Senegal date palm"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "phyllostachys-aurea",
+    "scientificName": "Phyllostachys aurea",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "golden bamboo"
+    ],
+    "zones": [
+      "N",
+      "C"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "pistia-stratiotes",
+    "scientificName": "Pistia stratiotes",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "water-lettuce"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "pittosporum-pentandrum",
+    "scientificName": "Pittosporum pentandrum",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Taiwanese cheesewood"
+    ],
+    "zones": [
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "platycerium-bifurcatum",
+    "scientificName": "Platycerium bifurcatum",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "staghorn fern"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "pongamia-pinnata",
+    "scientificName": "Pongamia pinnata",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Pongam"
+    ],
+    "zones": [
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "praxelis-clematidea",
+    "scientificName": "Praxelis clematidea",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "praxelis"
+    ],
+    "zones": [
+      "C"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "psidium-cattleianum",
+    "scientificName": "Psidium cattleianum",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "strawberry guava"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "psidium-guajava",
+    "scientificName": "Psidium guajava",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "guava"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "pteris-tripartita",
+    "scientificName": "Pteris tripartita",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "giant brake"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "pteris-vittata",
+    "scientificName": "Pteris vittata",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Chinese ladder brake"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "ptychosperma-elegans",
+    "scientificName": "Ptychosperma elegans",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Alexander palm",
+      "solitaire palm"
+    ],
+    "zones": [
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "pueraria-montana-var-lobata",
+    "scientificName": "Pueraria montana var. lobata",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "kudzu"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "rhodomyrtus-tomentosa",
+    "scientificName": "Rhodomyrtus tomentosa",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "rose myrtle",
+      "downy rose-myrtle"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "richardia-grandiflora",
+    "scientificName": "Richardia grandiflora",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "largeflower Mexican clover"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "ricinus-communis",
+    "scientificName": "Ricinus communis",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "castorbean"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "rotala-rotundifolia",
+    "scientificName": "Rotala rotundifolia",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "dwarf rotala",
+      "roundleaf toothcup"
+    ],
+    "zones": [
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "ruellia-blechum",
+    "scientificName": "Ruellia blechum",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Browne's blechum",
+      "green shrimp plant"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "ruellia-simplex",
+    "scientificName": "Ruellia simplex",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Britton's wild petunia",
+      "Mexican petunia"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "salvinia-minima",
+    "scientificName": "Salvinia minima",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "water spangles"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "salvinia-molesta",
+    "scientificName": "Salvinia molesta",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "giant salvinia, Kariba weed"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "scaevola-taccada",
+    "scientificName": "Scaevola taccada",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "beach naupaka"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "schinus-terebinthifolia",
+    "scientificName": "Schinus terebinthifolia",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Brazilian pepper"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "scleria-eggersiana",
+    "scientificName": "Scleria eggersiana",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Eggers nutrush"
+    ],
+    "zones": [
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "scleria-lacustris",
+    "scientificName": "Scleria lacustris",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Wright's nutrush",
+      "lakeshore nutrush"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "scleria-microcarpa",
+    "scientificName": "Scleria microcarpa",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Tropical nutrush"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "selenicereus-pteranthus",
+    "scientificName": "Selenicereus pteranthus",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "princess-of-the-night"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "senna-pendula-var-glabrata",
+    "scientificName": "Senna pendula var. glabrata",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Christmas cassia",
+      "valamuerto"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "sesbania-punicea",
+    "scientificName": "Sesbania punicea",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "rattlebox"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "sida-planicaulis",
+    "scientificName": "Sida planicaulis",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "flatstem sida",
+      "mata-pasto"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "solanum-diphyllum",
+    "scientificName": "Solanum diphyllum",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "twoleaf nightshade"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "solanum-tampicense",
+    "scientificName": "Solanum tampicense",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "wetland nightshade",
+      "aquatic soda apple"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "solanum-torvum",
+    "scientificName": "Solanum torvum",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "turkeyberry"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "solanum-viarum",
+    "scientificName": "Solanum viarum",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Tropical soda apple"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "spermacoce-verticillata",
+    "scientificName": "Spermacoce verticillata",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "shrubby false buttonweed"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "sphagneticola-trilobata",
+    "scientificName": "Sphagneticola trilobata",
+    "scientificSynonyms": [
+      "Wedelia triloba"
+    ],
+    "commonNames": [
+      "creeping oxeye",
+      "wedelia"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "sporobolus-jacquemontii",
+    "scientificName": "Sporobolus jacquemontii",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "West Indian dropseed",
+      "giant smutgrass"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "stachytarpheta-cayennensis",
+    "scientificName": "Stachytarpheta cayennensis",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "nettleleaf velvetberry"
+    ],
+    "zones": [
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "syagrus-romanzoffiana",
+    "scientificName": "Syagrus romanzoffiana",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "queen palm"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "syngonium-podophyllum",
+    "scientificName": "Syngonium podophyllum",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "arrowhead vine",
+      "American evergreen"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "syzygium-cumini",
+    "scientificName": "Syzygium cumini",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Java plum"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "syzygium-jambos",
+    "scientificName": "Syzygium jambos",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Malabar plum",
+      "rose apple"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "tabebuia-heterophylla",
+    "scientificName": "Tabebuia heterophylla",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "pink tabebuia",
+      "white cedar"
+    ],
+    "zones": [
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "talipariti-tiliaceum-var-tiliaceum",
+    "scientificName": "Talipariti tiliaceum var. tiliaceum",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "sea hibiscus",
+      "mahoe"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "tectaria-incisa",
+    "scientificName": "Tectaria incisa",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "incised halberd fern"
+    ],
+    "zones": [
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "terminalia-catappa",
+    "scientificName": "Terminalia catappa",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "West Indian almond",
+      "tropical almond",
+      "sea almond"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "terminalia-muelleri",
+    "scientificName": "Terminalia muelleri",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Australian almond"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "thelypteris-dentata",
+    "scientificName": "Thelypteris dentata",
+    "scientificSynonyms": [
+      "Christella dentata"
+    ],
+    "commonNames": [
+      "downy maiden fern",
+      "downy shield fern"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "thelypteris-opulenta",
+    "scientificName": "Thelypteris opulenta",
+    "scientificSynonyms": [
+      "Ambloventum opulentum"
+    ],
+    "commonNames": [
+      "jeweled maiden fern"
+    ],
+    "zones": [
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "thespesia-populnea",
+    "scientificName": "Thespesia populnea",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "portia tree",
+      "seaside mahoe"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "tradescantia-fluminensis",
+    "scientificName": "Tradescantia fluminensis",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "small-leaf spiderwort"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "tradescantia-spathacea",
+    "scientificName": "Tradescantia spathacea",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Moses-in-the-cradle",
+      "oyster-plant",
+      "boatlily"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "tradescantia-zebrina",
+    "scientificName": "Tradescantia zebrina",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "inchplant"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "triadica-sebifera",
+    "scientificName": "Triadica sebifera",
+    "scientificSynonyms": [
+      "Sapium sebiferum"
+    ],
+    "commonNames": [
+      "popcorntree",
+      "Chinese tallow tree"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "tribulus-cistoides",
+    "scientificName": "Tribulus cistoides",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "burr nut",
+      "Jamaican feverplant",
+      "puncture vine"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "urena-lobata",
+    "scientificName": "Urena lobata",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "caesarweed"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "urochloa-maxima",
+    "scientificName": "Urochloa maxima",
+    "scientificSynonyms": [
+      "Panicum maximum"
+    ],
+    "commonNames": [
+      "Guineagrass"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "urochloa-mutica",
+    "scientificName": "Urochloa mutica",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "paragrass"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "vernicia-fordii",
+    "scientificName": "Vernicia fordii",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "tung oil tree"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "vitex-rotundifolia",
+    "scientificName": "Vitex rotundifolia",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "beach vitex",
+      "roundleaf chastetree"
+    ],
+    "zones": [
+      "N",
+      "C"
+    ],
+    "category": "Category I",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "vitex-trifolia",
+    "scientificName": "Vitex trifolia",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "simpleleaf chastetree"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "washingtonia-robusta",
+    "scientificName": "Washingtonia robusta",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Washington fan palm"
+    ],
+    "zones": [
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "wisteria-sinensis",
+    "scientificName": "Wisteria sinensis",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "Chinese wisteria"
+    ],
+    "zones": [
+      "N",
+      "C"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  },
+  {
+    "id": "xanthosoma-sagittifolium",
+    "scientificName": "Xanthosoma sagittifolium",
+    "scientificSynonyms": [],
+    "commonNames": [
+      "arrowleaf elephant's ear"
+    ],
+    "zones": [
+      "N",
+      "C",
+      "S"
+    ],
+    "category": "Category II",
+    "region": "Florida",
+    "sourceName": "Florida Invasive Species Council invasive plant list",
+    "sourceUrl": "https://www.floridainvasives.org/plant-list/2023-invasive-plant-species/",
+    "sourceVersion": "April 2026",
+    "sourceRetrievedAt": "2026-10-09"
+  }
+]

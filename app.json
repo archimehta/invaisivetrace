@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "Spot the Spread",
+    "slug": "spot-the-spread",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Allow Spot the Spread to take plant photos for reports.",
+          "photosPermission": "Allow Spot the Spread to select plant photos for reports."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Spot the Spread to attach your location to a plant sighting."
+        }
+      ],
+      "expo-status-bar"
+    ]
+  }
+}

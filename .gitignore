@@ -1,0 +1,8 @@
+node_modules/
+.expo/
+.env
+backend/.env
+backend/pb_data/
+*.log
+.DS_Store
+.local/
