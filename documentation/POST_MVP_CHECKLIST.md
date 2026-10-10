@@ -12,7 +12,7 @@ See [POST_MVP_FEATURE_PLAN.md](POST_MVP_FEATURE_PLAN.md) for feature description
 - [x] All report photos are public with visible reports; strip metadata before upload.
 - [x] Anonymous reporters; no reporter account system for the demo.
 - [x] New reports are immediately public as `unverified`.
-- [x] Invite-only reviewers; a moderator grants reviewer roles.
+- [x] Regular member accounts with one backend-configured moderator role; reports are privately attributed to their submitting account.
 - [x] Public activity shows reviewer role and public reason, not personal identity; no private notes.
 - [x] Statuses: `unverified`, `needs_review`, `verified`, `rejected`; rejected reports are hidden from public map/list.
 - [x] Moderator retains reports and review history until deletion.
@@ -63,7 +63,7 @@ See [POST_MVP_FEATURE_PLAN.md](POST_MVP_FEATURE_PLAN.md) for feature description
 
 - [x] Implement multi-photo reporting while keeping existing single-photo reports readable.
 - [x] Implement inline report details and public activity history.
-- [x] Implement reviewer sign-in/invitations and status workflow, including rejected-report visibility rules.
+- [x] Implement account sign-up/sign-in, moderator-only community metrics, and status workflow, including rejected-report visibility rules.
 - [x] Implement reviewer-created impact events and separate impact counts.
 - [ ] Run through the demo acceptance scenarios with PocketBase running.
 - [ ] Validate the flows on the judge-facing device(s).
