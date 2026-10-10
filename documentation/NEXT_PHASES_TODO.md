@@ -37,18 +37,22 @@ Progress: API catalog search works (Hydrilla returns Category I; an unknown sear
 
 ## Phase 4: Verify reporting and community map
 
-- [ ] Submit a FISC-listed plant report and confirm its category/source and `unverified` status.
-- [ ] Submit an unlisted possible invasive report and confirm it also appears as `unverified`.
-- [ ] Open the map as another app session/user and confirm reports are visible without reporter identity.
-- [ ] Confirm exact public coordinates are used only after explicit opt-in.
-- [ ] Confirm coordinates are generalized when the reporter does not opt in.
-- [ ] Check behavior when location permission is denied, the API is offline, or map tiles are unavailable.
+Progress: Backend report checks passed with clearly labeled temporary test records. A FISC-listed Brazilian pepper report returned Category I and `unverified`; an unlisted report returned no FISC category and `unverified`. The public feed generalized coordinates when exact-location opt-in was false and returned exact coordinates when opt-in was true. Both temporary records and their uploaded test photos were removed after validation. The user confirmed the phone map, separate app session, privacy behavior, and unavailable-service cases all work.
+
+- [x] Submit a FISC-listed plant report and confirm its category/source and `unverified` status (backend validated).
+- [x] Submit an unlisted possible invasive report and confirm it also appears as `unverified` (backend validated).
+- [x] Open the map as another app session/user and confirm reports are visible without reporter identity.
+- [x] Confirm exact public coordinates are used only after explicit opt-in (backend validated).
+- [x] Confirm coordinates are generalized when the reporter does not opt in (backend validated).
+- [x] Check behavior when location permission is denied, the API is offline, or map tiles are unavailable.
 
 ## Phase 5: Verify moderation
 
-- [ ] Open a report in PocketBase and update its identification or status to `verified` or `needs_review`.
-- [ ] Confirm updated status and identification appear on the community map.
-- [ ] Prepare a repeatable moderator workflow for the demo; do not represent any agency or expert organization as a partner unless that is confirmed.
+Progress: PocketBase moderation behavior was validated on a temporary test record: the identification was corrected from an unlisted test name to Brazilian pepper, marked `verified`, and the public reports endpoint reflected the corrected name, FISC Category I, and status. The user confirmed the verified test report appeared on the Expo Go map. The temporary record and photo were then removed.
+
+- [x] Update a report in PocketBase and set its identification/status to `verified` (backend validated; use the dashboard workflow for the live demo).
+- [x] Confirm updated status and identification appear on the community map.
+- [x] Prepare a repeatable moderator workflow for the demo; do not represent any agency or expert organization as a partner unless that is confirmed (steps are in `backend/README.md`).
 
 ## Phase 6: Prepare and rehearse the demo
 
