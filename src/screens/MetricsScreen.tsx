@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { ActionButton, colors, contributorTitle, styles } from '../components/shared';
 import { SightingsVM } from '../hooks/useSightings';
 
 export function MetricsScreen({ vm }: { vm: SightingsVM }) {
-  const { communityMetrics, refreshCommunityMetrics, refreshAccountData, authToken, authUser, userMetrics, setTab, moderationQueue, reviewReport } = vm;
+  const { communityMetrics, refreshCommunityMetrics, refreshAccountData, communityTrends, trendsLoading, trendsError, refreshCommunityTrends, authToken, authUser, userMetrics, setTab, moderationQueue, reviewReport } = vm;
+  const [trendInterval, setTrendInterval] = useState<'week' | 'month'>('week');
+  const [trendRange, setTrendRange] = useState<'30d' | '90d' | '6m' | '1y' | 'all'>('90d');
   const data = communityMetrics;
   const title = contributorTitle(userMetrics?.verifiedReports || 0);
   const speciesMax = Math.max(1, ...(data?.topSpecies.map((item) => item.count) || []));
@@ -14,6 +16,16 @@ export function MetricsScreen({ vm }: { vm: SightingsVM }) {
     if (!value) return 'Not provided';
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+  };
+  useEffect(() => { void refreshCommunityTrends(trendInterval, trendRange); }, [trendInterval, trendRange]);
+  const trendPoints = communityTrends?.interval === trendInterval && communityTrends.range === trendRange ? communityTrends.points : [];
+  const maxTrendCount = Math.max(1, ...trendPoints.flatMap((point) => [point.submitted, point.confirmed]));
+  const rangeLabels = [['30d', '30 days'], ['90d', '90 days'], ['6m', '6 mo'], ['1y', '1 year'], ['all', 'All'] ] as const;
+  const formatPeriod = (value: string) => {
+    const date = new Date(`${value}T00:00:00Z`);
+    return trendInterval === 'week'
+      ? date.toLocaleDateString(undefined, { month: 'numeric', day: 'numeric', timeZone: 'UTC' })
+      : date.toLocaleDateString(undefined, { month: 'short', year: '2-digit', timeZone: 'UTC' });
   };
 
   return <ScrollView contentContainerStyle={[styles.content, { paddingTop: 24, paddingBottom: 42 }]}>
@@ -31,7 +43,31 @@ export function MetricsScreen({ vm }: { vm: SightingsVM }) {
         ].map(([label, count]) => <View key={label} style={{ flex: 1, backgroundColor: '#FFFFFF18', borderRadius: 14, padding: 11 }}><Text style={{ color: '#FFFDF3', fontSize: 21, fontWeight: '900' }}>{count}</Text><Text style={{ color: '#D9E7D5', fontSize: 9, marginTop: 4 }}>{label}</Text></View>)}
       </View>
     </View>
-    <Pressable onPress={() => { void refreshCommunityMetrics(); if (authToken) void refreshAccountData(); }} style={{ alignSelf: 'flex-start', paddingVertical: 11 }}><Text style={{ color: colors.green, fontSize: 12, fontWeight: '800' }}>Refresh metrics ↻</Text></Pressable>
+    <Pressable onPress={() => { void refreshCommunityMetrics(); void refreshCommunityTrends(trendInterval, trendRange); if (authToken) void refreshAccountData(); }} style={{ alignSelf: 'flex-start', paddingVertical: 11 }}><Text style={{ color: colors.green, fontSize: 12, fontWeight: '800' }}>Refresh metrics ↻</Text></Pressable>
+
+    <View style={{ marginTop: 13, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: 15 }}>
+      <Text style={styles.eyebrow}>SIGHTINGS OVER TIME</Text>
+      <Text style={styles.sectionTitle}>Reports submitted & confirmed</Text>
+      <Text style={styles.helperText}>Submissions are grouped by upload date; confirmations by moderator review date.</Text>
+      <View style={{ flexDirection: 'row', gap: 6, marginTop: 13, backgroundColor: colors.paper, borderRadius: 13, padding: 4 }}>
+        {([['week', 'Weekly'], ['month', 'Monthly']] as const).map(([value, label]) => <Pressable key={value} accessibilityRole="button" accessibilityState={{ selected: trendInterval === value }} onPress={() => setTrendInterval(value)} style={{ flex: 1, alignItems: 'center', borderRadius: 10, paddingVertical: 9, backgroundColor: trendInterval === value ? colors.green : 'transparent' }}><Text style={{ color: trendInterval === value ? colors.white : colors.muted, fontSize: 11, fontWeight: '800' }}>{label}</Text></Pressable>)}
+      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 10 }}>
+        {rangeLabels.map(([value, label]) => <Pressable key={value} accessibilityRole="button" accessibilityState={{ selected: trendRange === value }} onPress={() => setTrendRange(value)} style={{ borderRadius: 14, paddingHorizontal: 10, paddingVertical: 7, backgroundColor: trendRange === value ? '#E5EDE3' : colors.paper }}><Text style={{ color: trendRange === value ? colors.green : colors.muted, fontSize: 10, fontWeight: '800' }}>{label}</Text></Pressable>)}
+      </ScrollView>
+      <View style={{ flexDirection: 'row', gap: 14, marginBottom: 3 }}><View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}><View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.green }} /><Text style={{ color: colors.muted, fontSize: 9 }}>Submitted</Text></View><View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}><View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#B28A47' }} /><Text style={{ color: colors.muted, fontSize: 9 }}>Confirmed</Text></View></View>
+      <Text style={{ color: colors.muted, fontSize: 8, marginTop: 2 }}>Numbers under each period: submitted · confirmed</Text>
+      {trendsLoading && !communityTrends ? <View style={{ minHeight: 150, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator color={colors.green} /><Text style={styles.helperText}>Loading trend data…</Text></View> : trendsError ? <View style={{ minHeight: 125, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: colors.red, fontSize: 11, textAlign: 'center' }}>{trendsError}</Text></View> : trendPoints.length ? <ScrollView horizontal showsHorizontalScrollIndicator contentContainerStyle={{ alignItems: 'flex-end', gap: 7, paddingTop: 12, paddingBottom: 4 }}>
+        {trendPoints.map((point) => <View key={point.period} accessibilityLabel={`${formatPeriod(point.period)}: ${point.submitted} submitted, ${point.confirmed} confirmed`} style={{ width: 48, alignItems: 'center' }}>
+          <View style={{ height: 112, flexDirection: 'row', alignItems: 'flex-end', gap: 4 }}>
+            <View style={{ width: 15, height: Math.max(2, point.submitted / maxTrendCount * 104), borderTopLeftRadius: 5, borderTopRightRadius: 5, backgroundColor: colors.green }} />
+            <View style={{ width: 15, height: Math.max(2, point.confirmed / maxTrendCount * 104), borderTopLeftRadius: 5, borderTopRightRadius: 5, backgroundColor: '#B28A47' }} />
+          </View>
+          <Text style={{ color: colors.muted, fontSize: 9, marginTop: 6 }}>{formatPeriod(point.period)}</Text>
+          <Text style={{ color: colors.ink, fontSize: 8, marginTop: 2 }}>{point.submitted} · {point.confirmed}</Text>
+        </View>)}
+      </ScrollView> : trendsLoading ? <View style={{ minHeight: 150, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator color={colors.green} /></View> : <View style={{ minHeight: 125, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: colors.muted, fontSize: 11, textAlign: 'center' }}>No reports in this date range yet. Try a wider range or check back after new sightings are submitted.</Text></View>}
+    </View>
 
     {authUser?.role === 'moderator' ? <View style={{ marginTop: 16 }}>
       <Text style={styles.eyebrow}>MODERATOR TOOLS</Text>

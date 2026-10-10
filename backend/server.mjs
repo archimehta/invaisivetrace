@@ -270,11 +270,12 @@ app.get('/api/health', (_req, res) => res.json({ ok: true, accountSystem: true, 
 app.get('/api/metrics', async (_req, res, next) => {
   try {
     const [reports, accounts] = await Promise.all([
-      pb.collection('reports').getFullList({ filter: 'reviewStatus != "rejected"', fields: 'speciesName,scientificName,listedCategory,reviewStatus,locationLabel,reporterId' }),
+      pb.collection('reports').getFullList({ fields: 'speciesName,scientificName,listedCategory,reviewStatus,locationLabel,reporterId' }),
       pb.collection('app_accounts').getFullList({ fields: 'id,displayName,role,leaderboardVisible' }),
     ]);
-    const confirmed = reports.filter((report) => report.reviewStatus === 'verified');
-    const awaiting = reports.filter((report) => ['unverified', 'needs_review'].includes(report.reviewStatus));
+    const visibleReports = reports.filter((report) => report.reviewStatus !== 'rejected');
+    const confirmed = visibleReports.filter((report) => report.reviewStatus === 'verified');
+    const awaiting = visibleReports.filter((report) => ['unverified', 'needs_review'].includes(report.reviewStatus));
     const speciesCounts = new Map();
     for (const report of confirmed) {
       const name = String(report.speciesName || 'Unidentified plant');
@@ -290,7 +291,7 @@ app.get('/api/metrics', async (_req, res, next) => {
       locationCounts.set(label, (locationCounts.get(label) || 0) + 1);
     }
     const countsByUser = new Map();
-    for (const report of reports) {
+    for (const report of visibleReports) {
       if (!report.reporterId) continue;
       const item = countsByUser.get(report.reporterId) || { reportsSubmitted: 0, confirmedReports: 0 };
       item.reportsSubmitted += 1;
@@ -307,6 +308,71 @@ app.get('/api/metrics', async (_req, res, next) => {
       topLocations: [...locationCounts.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)).slice(0, 5),
       leaderboard,
     });
+  } catch (error) { next(error); }
+});
+app.get('/api/metrics/trends', async (req, res, next) => {
+  try {
+    const interval = req.query.interval === 'month' ? 'month' : 'week';
+    const allowedRanges = new Set(['30d', '90d', '6m', '1y', 'all']);
+    const range = allowedRanges.has(String(req.query.range)) ? String(req.query.range) : '90d';
+    const [reports, activity] = await Promise.all([
+      pb.collection('reports').getFullList({ fields: 'id,created,observedAt,reviewStatus' }),
+      pb.collection('report_activity').getFullList({ fields: 'report,eventType,toStatus,occurredAt' }),
+    ]);
+    const confirmedAt = new Map();
+    for (const event of activity) {
+      if (event.eventType !== 'review_status_changed' || event.toStatus !== 'verified') continue;
+      const timestamp = Date.parse(event.occurredAt);
+      if (!Number.isFinite(timestamp)) continue;
+      const previous = confirmedAt.get(event.report);
+      if (!previous || timestamp < previous) confirmedAt.set(event.report, timestamp);
+    }
+    const entries = [];
+    for (const report of reports) {
+      const submittedAt = Date.parse(report.created || report.observedAt);
+      if (Number.isFinite(submittedAt)) entries.push({ kind: 'submitted', timestamp: submittedAt });
+      let timestamp = confirmedAt.get(report.id);
+      // Older reports may only have the synthetic history_started entry. Use their
+      // creation time as a conservative fallback when they are currently verified.
+      if (!timestamp && report.reviewStatus === 'verified') {
+        const fallback = Date.parse(report.created || report.observedAt);
+        if (Number.isFinite(fallback)) timestamp = fallback;
+      }
+      if (timestamp) entries.push({ kind: 'confirmed', timestamp });
+    }
+
+    const now = new Date();
+    const rangeStart = range === '30d' ? new Date(now.getTime() - 30 * 86400000)
+      : range === '90d' ? new Date(now.getTime() - 90 * 86400000)
+      : range === '6m' ? new Date(now.getTime())
+      : range === '1y' ? new Date(now.getTime()) : null;
+    if (range === '6m') rangeStart.setUTCMonth(rangeStart.getUTCMonth() - 6);
+    if (range === '1y') rangeStart.setUTCFullYear(rangeStart.getUTCFullYear() - 1);
+
+    const bucketStart = (date) => {
+      const bucket = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+      if (interval === 'month') bucket.setUTCDate(1);
+      else bucket.setUTCDate(bucket.getUTCDate() - ((bucket.getUTCDay() + 6) % 7));
+      return bucket;
+    };
+    const relevant = entries.filter((entry) => !rangeStart || entry.timestamp >= rangeStart.getTime());
+    if (range === 'all' && relevant.length === 0) return res.json({ interval, range, points: [] });
+    const oldest = relevant.length ? relevant.reduce((minimum, entry) => Math.min(minimum, entry.timestamp), Number.POSITIVE_INFINITY) : now.getTime();
+    const firstBucket = range === 'all' ? bucketStart(new Date(oldest)) : bucketStart(rangeStart);
+    const lastBucket = bucketStart(now);
+    const counts = new Map();
+    for (const entry of relevant) {
+      const key = bucketStart(new Date(entry.timestamp)).toISOString().slice(0, 10);
+      const count = counts.get(key) || { submitted: 0, confirmed: 0 };
+      count[entry.kind] += 1;
+      counts.set(key, count);
+    }
+    const points = [];
+    for (const bucket = new Date(firstBucket); bucket <= lastBucket; interval === 'month' ? bucket.setUTCMonth(bucket.getUTCMonth() + 1) : bucket.setUTCDate(bucket.getUTCDate() + 7)) {
+      const period = bucket.toISOString().slice(0, 10);
+      points.push({ period, ...(counts.get(period) || { submitted: 0, confirmed: 0 }) });
+    }
+    res.json({ interval, range, points });
   } catch (error) { next(error); }
 });
 app.post('/api/auth/signup', async (req, res, next) => {
