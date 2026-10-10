@@ -307,9 +307,10 @@ app.get('/api/account/reports', requireUser, async (req, res, next) => {
 });
 app.get('/api/moderation/metrics', requireModerator, async (_req, res, next) => {
   try {
-    const [users, reports] = await Promise.all([
+    const [users, reports, impactEvents] = await Promise.all([
       pb.collection('app_accounts').getFullList({ fields: 'id,email,displayName,role,created' }),
       pb.collection('reports').getFullList({ fields: 'id,reporterId,reporterName,reviewStatus,observedAt' }),
+      pb.collection('impact_events').getFullList({ fields: 'id,eventType' }),
     ]);
     const byUser = new Map();
     for (const report of reports) {
@@ -322,7 +323,7 @@ app.get('/api/moderation/metrics', requireModerator, async (_req, res, next) => 
       byUser.set(report.reporterId, aggregate);
     }
     const contributors = users.filter((user) => user.role === 'user').map((user) => ({ id: user.id, displayName: user.displayName, email: user.email, accountCreatedAt: user.created || null, ...(byUser.get(user.id) || { reportsSubmitted: 0, verifiedReports: 0, awaitingReview: 0 }) })).sort((a, b) => b.reportsSubmitted - a.reportsSubmitted || a.displayName.localeCompare(b.displayName));
-    res.json({ metrics: { registeredUsers: contributors.length, reportsSubmitted: reports.length, verifiedReports: reports.filter((report) => report.reviewStatus === 'verified').length, awaitingReview: reports.filter((report) => ['unverified', 'needs_review'].includes(report.reviewStatus)).length }, contributors });
+    res.json({ metrics: { registeredUsers: contributors.length, reportsSubmitted: reports.length, verifiedReports: reports.filter((report) => report.reviewStatus === 'verified').length, awaitingReview: reports.filter((report) => ['unverified', 'needs_review'].includes(report.reviewStatus)).length, inspections: impactEvents.filter((event) => event.eventType === 'inspection').length, treatments: impactEvents.filter((event) => event.eventType === 'treatment').length, followUps: impactEvents.filter((event) => event.eventType === 'follow-up').length }, contributors });
   } catch (error) { next(error); }
 });
 app.get('/api/species', (req, res) => {

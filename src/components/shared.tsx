@@ -6,15 +6,26 @@ import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import catalogJson from '../../data/fisc-species.json';
 export type Species = (typeof catalogJson)[number];
 
+export type ReportPhoto = { id: string; url: string; isPrimary: boolean; position: number };
+export type ReportActivity = { id: string; type: string; actorRole: string; publicReason?: string; fromStatus?: string; toStatus?: string; occurredAt: string };
+export type ImpactEvent = { id: string; type: 'inspection' | 'treatment' | 'follow-up'; date: string; note: string; actorRole: string; photos: string[] };
 export type Report = {
-
   id: string; speciesName: string; scientificName?: string; isFiscListed: boolean;
-
-  listedCategory?: string; observedAt: string; note?: string; latitude: number; longitude: number;
-
+  listedCategory?: string; sourceUrl?: string | null; geminiSuggestion?: string;
+  observedAt: string; note?: string; latitude: number; longitude: number;
   exactLocationPublic: boolean; reviewStatus: string; photoUrl?: string | null;
-
+  photos?: ReportPhoto[]; activity?: ReportActivity[]; impactEvents?: ImpactEvent[];
+  reporter?: { id: string | null; displayName: string };
 };
+export function summarizeImpact(reports: Report[]) {
+  const events = reports.flatMap((report) => report.impactEvents || []);
+  return {
+    verified: reports.filter((report) => report.reviewStatus === 'verified').length,
+    inspections: events.filter((event) => event.type === 'inspection').length,
+    treatments: events.filter((event) => event.type === 'treatment').length,
+    followUps: events.filter((event) => event.type === 'follow-up').length,
+  };
+}
 
 export type PlantGuess = { isPlant?: boolean; commonName?: string; scientificName?: string; alternatives?: string[]; confidence?: string; rationale?: string; fiscMatch?: { id: string; category: string } | null };
 

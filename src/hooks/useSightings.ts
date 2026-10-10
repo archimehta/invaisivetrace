@@ -8,7 +8,7 @@ import { Species, Report, PlantGuess, Coordinate, catalog, API_URL, ORLANDO, fin
 export function useSightings() {
 
 
-const [tab, setTab] = useState<'home' | 'map' | 'sightings' | 'report' | 'account'>('home');
+const [tab, setTab] = useState<'home' | 'map' | 'sightings' | 'report' | 'account' | 'review'>('home');
 
 const [reports, setReports] = useState<Report[]>([]);
 
@@ -22,9 +22,12 @@ const [authEmail, setAuthEmail] = useState('');
 const [authPassword, setAuthPassword] = useState('');
 const [authBusy, setAuthBusy] = useState(false);
 const [userMetrics, setUserMetrics] = useState<{ reportsSubmitted: number; verifiedReports: number; awaitingReview: number; impactEventsRecorded: number } | null>(null);
-const [moderatorMetrics, setModeratorMetrics] = useState<{ metrics: { registeredUsers: number; reportsSubmitted: number; verifiedReports: number; awaitingReview: number }; contributors: { id: string; displayName: string; email: string; reportsSubmitted: number; verifiedReports: number; awaitingReview: number; lastReportAt?: string }[] } | null>(null);
+const [moderatorMetrics, setModeratorMetrics] = useState<{ metrics: { registeredUsers: number; reportsSubmitted: number; verifiedReports: number; awaitingReview: number; inspections?: number; treatments?: number; followUps?: number }; contributors: { id: string; displayName: string; email: string; reportsSubmitted: number; verifiedReports: number; awaitingReview: number; lastReportAt?: string }[] } | null>(null);
+const [reviewReports, setReviewReports] = useState<Report[]>([]);
+const [reviewBusy, setReviewBusy] = useState(false);
 
 const [photo, setPhoto] = useState<ImagePicker.ImagePickerAsset | null>(null);
+const [supportingPhotos, setSupportingPhotos] = useState<ImagePicker.ImagePickerAsset[]>([]);
 
 const [guess, setGuess] = useState<PlantGuess | null>(null);
 
@@ -73,6 +76,13 @@ const payload = await response.json();
 
 
   useEffect(() => { void refreshReports(); }, []);
+const refreshReviewReports = async (token = authToken) => {
+    if (!token) return;
+    const response = await fetch(`${API_URL}/api/moderation/reports`, { headers: { Authorization: `Bearer ${token}` } });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || 'Could not load the review queue.');
+    setReviewReports(payload.reports || []);
+  };
 
 const refreshAccountData = async (token = authToken, role = authUser?.role) => {
     if (!token) return;
@@ -110,6 +120,7 @@ const authenticate = async () => {
       setAuthPassword('');
       setModeratorMetrics(null);
       await refreshAccountData(payload.token, payload.user.role);
+      if (payload.user.role === 'moderator') await refreshReviewReports(payload.token);
     } catch (error) {
       Alert.alert(authMode === 'signup' ? 'Could not create account' : 'Could not sign in', error instanceof Error ? error.message : 'Check the API connection and try again.');
     } finally { setAuthBusy(false); }
@@ -118,7 +129,7 @@ const authenticate = async () => {
 const signOut = async () => {
     const token = authToken;
     try { if (token) await fetch(`${API_URL}/api/auth/logout`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } }); } catch { /* Sign out locally even if the API is offline. */ }
-    setAuthToken(null); setAuthUser(null); setUserMetrics(null); setModeratorMetrics(null); setAuthPassword('');
+    setAuthToken(null); setAuthUser(null); setUserMetrics(null); setModeratorMetrics(null); setReviewReports([]); setAuthPassword(''); setTab('home');
   };
 
 
@@ -135,7 +146,7 @@ const query = search.trim().toLocaleLowerCase();
 
 
 
-const choosePhoto = async (useCamera: boolean) => {
+const choosePhoto = async (useCamera: boolean, supporting = false) => {
 
     try {
 
@@ -197,11 +208,17 @@ const asset = result.assets?.[0];
 
       }
 
-      setPhoto(asset);
+      if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) {
+        Alert.alert('Photo is too large', 'Each report photo must be 5 MB or smaller. Choose a smaller image and try again.');
+        return;
+      }
 
-      setGuess(null);
-
-      setGuessMessage('Photo ready. Ask Gemini for a tentative plant identification, or identify it manually.');
+      if (supporting) setSupportingPhotos((current) => current.length < 3 ? [...current, asset] : current);
+      else {
+        setPhoto(asset);
+        setGuess(null);
+        setGuessMessage('Photo ready. Ask Gemini for a tentative plant identification, or identify it manually.');
+      }
 
     } catch (error) {
 
@@ -331,7 +348,7 @@ const scientificName = selectedSpecies?.scientificName || (!manualMode || manual
 
       if (!authToken) { setTab('account'); throw new Error('Create an account or sign in before submitting a sighting.'); }
 
-      await uploadPhoto('/api/reports', photo, {
+      const created = await uploadPhoto<{ report: Report }>('/api/reports', photo, {
 
         speciesName,
 
@@ -351,12 +368,18 @@ const scientificName = selectedSpecies?.scientificName || (!manualMode || manual
 
       }, authToken);
 
+      let supportingUploadError = '';
+      for (const supportingPhoto of supportingPhotos) {
+        try { await uploadPhoto(`/api/reports/${created.report.id}/photos`, supportingPhoto, {}, authToken); }
+        catch (error) { supportingUploadError = error instanceof Error ? error.message : 'A supporting photo could not be uploaded.'; break; }
+      }
+
       await refreshReports();
       await refreshAccountData(authToken, authUser?.role);
 
-      setPhoto(null); setGuess(null); setSelectedSpecies(null); setManualName(''); setManualMode(false); setSearch(''); setNote(''); setLocation(null); setExactLocationPublic(false); setTab('home');
+      setPhoto(null); setSupportingPhotos([]); setGuess(null); setSelectedSpecies(null); setManualName(''); setManualMode(false); setSearch(''); setNote(''); setLocation(null); setExactLocationPublic(false); setTab('home');
 
-      Alert.alert('Report submitted', 'Your sighting is on the community map as unverified and can now be reviewed.');
+      Alert.alert(supportingUploadError ? 'Report submitted with photo issue' : 'Report submitted', supportingUploadError ? `The report is saved, but a supporting photo could not be uploaded: ${supportingUploadError}` : 'Your sighting is on the community map as unverified and can now be reviewed.');
 
     } catch (error) {
 
@@ -364,6 +387,42 @@ const scientificName = selectedSpecies?.scientificName || (!manualMode || manual
 
     } finally { setIsSubmitting(false); }
 
+  };
+
+const reviewReport = async (report: Report, status: string, reason: string, speciesName: string, scientificName: string) => {
+    if (!authToken) throw new Error('Sign in as moderator to review reports.');
+    const response = await fetch(`${API_URL}/api/reports/${report.id}/review`, { method: 'POST', headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ status, reason, speciesName: speciesName.trim() || undefined, scientificName: scientificName.trim() || undefined }) });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || 'Could not update report review.');
+    await Promise.all([refreshReports(), refreshReviewReports(), refreshAccountData(authToken, authUser?.role)]);
+  };
+
+const addImpactEvent = async (reportId: string, type: string, date: string, noteText: string, eventPhoto?: ImagePicker.ImagePickerAsset) => {
+    if (!authToken) throw new Error('Sign in as moderator to record an event.');
+    if (eventPhoto) await uploadPhoto(`/api/reports/${reportId}/impact-events`, eventPhoto, { type, date, note: noteText }, authToken);
+    else {
+      const response = await fetch(`${API_URL}/api/reports/${reportId}/impact-events`, { method: 'POST', headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ type, date, note: noteText }) });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || 'Could not record the event.');
+    }
+    await Promise.all([refreshReports(), refreshReviewReports(), refreshAccountData(authToken, authUser?.role)]);
+  };
+
+const deleteReport = async (reportId: string) => {
+    if (!authToken) throw new Error('Sign in as moderator to delete reports.');
+    const response = await fetch(`${API_URL}/api/reports/${reportId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${authToken}` } });
+    if (!response.ok) { const payload = await response.json().catch(() => ({})); throw new Error(payload.error || 'Could not delete report.'); }
+    await Promise.all([refreshReports(), refreshReviewReports(), refreshAccountData(authToken, authUser?.role)]);
+  };
+
+const pickEventPhoto = async (): Promise<ImagePicker.ImagePickerAsset | null> => {
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.82 });
+    const asset = result.canceled ? null : result.assets?.[0] || null;
+    if (asset?.fileSize && asset.fileSize > 5 * 1024 * 1024) {
+      Alert.alert('Photo is too large', 'Event photos must be 5 MB or smaller. Choose a smaller image and try again.');
+      return null;
+    }
+    return asset;
   };
 
 
@@ -375,6 +434,6 @@ const reportCountLabel = `${reports.length} ${reports.length === 1 ? 'sighting' 
 
 
 
-return {tab,setTab,reports,apiOnline,photo,setPhoto,guess,setGuess,guessMessage,isIdentifying,selectedSpecies,setSelectedSpecies,manualName,setManualName,manualMode,setManualMode,search,setSearch,note,setNote,exactLocationPublic,setExactLocationPublic,location,setLocation,locationMessage,setLocationMessage,isSubmitting,refreshReports,filteredSpecies,choosePhoto,identifyPhoto,setCurrentLocation,submitReport,activeCenter,reportCountLabel,authToken,authUser,authMode,setAuthMode,authName,setAuthName,authEmail,setAuthEmail,authPassword,setAuthPassword,authBusy,authenticate,signOut,userMetrics,moderatorMetrics,refreshAccountData};
+return {tab,setTab,reports,apiOnline,photo,setPhoto,supportingPhotos,setSupportingPhotos,guess,setGuess,guessMessage,isIdentifying,selectedSpecies,setSelectedSpecies,manualName,setManualName,manualMode,setManualMode,search,setSearch,note,setNote,exactLocationPublic,setExactLocationPublic,location,setLocation,locationMessage,setLocationMessage,isSubmitting,refreshReports,filteredSpecies,choosePhoto,identifyPhoto,setCurrentLocation,submitReport,activeCenter,reportCountLabel,authToken,authUser,authMode,setAuthMode,authName,setAuthName,authEmail,setAuthEmail,authPassword,setAuthPassword,authBusy,authenticate,signOut,userMetrics,moderatorMetrics,refreshAccountData,reviewReports,reviewBusy,setReviewBusy,refreshReviewReports,reviewReport,addImpactEvent,deleteReport,pickEventPhoto};
 }
 export type SightingsVM = ReturnType<typeof useSightings>;
