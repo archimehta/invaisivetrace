@@ -1,4 +1,4 @@
-# Spot the Spread — Post-MVP Planning Checklist
+# InvAIsive Trace — Post-MVP Planning Checklist
 
 This checklist records the agreed post-MVP direction and implementation progress for the hackathon demo. The product decisions in Stage 1 are locked; remaining items are validation tasks.
 

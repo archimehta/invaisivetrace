@@ -1,4 +1,4 @@
-# Spot the Spread: Implemented MVP
+# InvAIsive Trace: Implemented MVP
 
 ## Product behavior
 

@@ -472,7 +472,7 @@ const scientificName = selectedSpecies?.scientificName || (!manualMode || manual
 const reviewReport = async (reportOrId: Report | string, status: string, reason?: string, speciesName?: string, scientificName?: string) => {
     if (!authToken) throw new Error('Sign in as moderator to review reports.');
     const reportId = typeof reportOrId === 'string' ? reportOrId : reportOrId.id;
-    const publicReason = reason?.trim() || (status === 'verified' ? 'Confirmed by the Spot the Spread community moderator.' : 'Flagged for additional review by the community moderator.');
+    const publicReason = reason?.trim() || (status === 'verified' ? 'Confirmed by the InvAIsive Trace community moderator.' : 'Flagged for additional review by the community moderator.');
     const response = await fetch(`${API_URL}/api/reports/${encodeURIComponent(reportId)}/review`, { method: 'POST', headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ status, reason: publicReason, speciesName: speciesName?.trim() || undefined, scientificName: scientificName?.trim() || undefined }) });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || 'Could not update report review.');

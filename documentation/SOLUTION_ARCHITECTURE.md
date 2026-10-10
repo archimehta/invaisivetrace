@@ -1,4 +1,4 @@
-# Spot the Spread — Solution Architecture
+# InvAIsive Trace — Solution Architecture
 
 ## Goal
 

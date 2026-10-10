@@ -664,4 +664,4 @@ app.use((error, _req, res, _next) => {
 });
 
 await setupDatabase();
-app.listen(PORT, '0.0.0.0', () => console.log(`Spot the Spread API listening on http://0.0.0.0:${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`InvAIsive Trace API listening on http://0.0.0.0:${PORT}`));

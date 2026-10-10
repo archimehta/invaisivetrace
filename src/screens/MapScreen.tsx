@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { ActionButton, MapPanel, ORLANDO, colors, styles, summarizeImpact } from '../components/shared';
+import { BrandWordmark } from '../components/BrandWordmark';
 import { SightingsVM } from '../hooks/useSightings';
 
 export function MapScreen({vm}:{vm:SightingsVM}) {
@@ -9,7 +10,8 @@ export function MapScreen({vm}:{vm:SightingsVM}) {
  const impact=summarizeImpact(reports);
  return <ScrollView contentContainerStyle={[styles.content,{paddingTop:0}]}>
   <View style={{backgroundColor:'#183E2E',marginHorizontal:-20,paddingHorizontal:22,paddingTop:25,paddingBottom:22,borderBottomLeftRadius:28,borderBottomRightRadius:28,marginBottom:20}}>
-   <Text style={{fontSize:11,color:'#C9DDBE',fontWeight:'800',letterSpacing:1.7}}>SPOT THE SPREAD · ORANGE COUNTY</Text>
+   <BrandWordmark />
+   <Text style={{fontSize:9,color:'#C9DDBE',fontWeight:'800',letterSpacing:1.7,marginTop:5}}>ORANGE COUNTY · COMMUNITY FIELD GUIDE</Text>
    <Text style={{fontSize:31,lineHeight:36,color:'#FFFDF3',fontWeight:'700',marginTop:13,fontFamily:'Georgia'}}>Know what’s{ '\n' }growing nearby.</Text>
    <Text style={{fontSize:13,lineHeight:19,color:'#D4E2D5',marginTop:8,maxWidth:300}}>Community sightings help us notice invasive plants earlier and protect the places we love.</Text>
    <View style={{flexDirection:'row',gap:10,marginTop:18}}>

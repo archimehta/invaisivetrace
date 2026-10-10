@@ -1,4 +1,4 @@
-# Spot the Spread
+# InvAIsive Trace
 
 Expo React Native app for photo-assisted reporting of possible invasive plant sightings in Orange County, Florida. Gemini suggestions are tentative. The bundled catalog includes all 179 FISC Category I and II plants from the April 2026 list. A plant missing from that list can still be submitted as a possible unlisted invasive for review.
 

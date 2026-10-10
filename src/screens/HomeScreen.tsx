@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
+import { BrandWordmark } from '../components/BrandWordmark';
 import { ActionButton, colors, styles, summarizeImpact } from '../components/shared';
 import { SightingsVM } from '../hooks/useSightings';
 
@@ -9,7 +10,8 @@ export function HomeScreen({vm}:{vm:SightingsVM}) {
  const impact=summarizeImpact(reports);
  return <ScrollView contentContainerStyle={[styles.content,{paddingTop:0,paddingBottom:34}]}>
   <View style={{backgroundColor:'#183E2E',marginHorizontal:-20,paddingHorizontal:23,paddingTop:29,paddingBottom:25,borderBottomLeftRadius:30,borderBottomRightRadius:30}}>
-   <Text style={{fontSize:11,color:'#C9DDBE',fontWeight:'800',letterSpacing:1.8}}>SPOT THE SPREAD · ORANGE COUNTY</Text>
+   <BrandWordmark />
+   <Text style={{fontSize:9,color:'#C9DDBE',fontWeight:'800',letterSpacing:1.7,marginTop:5}}>ORANGE COUNTY · COMMUNITY FIELD GUIDE</Text>
    <Text style={{fontSize:34,lineHeight:40,color:'#FFFDF3',fontWeight:'700',marginTop:18,fontFamily:'Georgia'}}>Small sightings.{ '\n' }A healthier home.</Text>
    <Text style={{fontSize:14,lineHeight:21,color:'#D4E2D5',marginTop:12}}>Our mission is to help neighbors notice and document invasive plants early, so local communities can better protect Florida’s natural places.</Text>
    <View style={{marginTop:20}}><ActionButton title="Report a plant  →" onPress={()=>setTab('report')}/></View>
@@ -24,7 +26,7 @@ export function HomeScreen({vm}:{vm:SightingsVM}) {
   <View style={{marginTop:25}}><Text style={styles.eyebrow}>WHY IT MATTERS</Text><Text style={{fontSize:22,lineHeight:28,color:colors.ink,fontWeight:'700',fontFamily:'Georgia'}}>Local knowledge can make a difference.</Text><Text style={{fontSize:13,lineHeight:20,color:colors.muted,marginTop:8}}>Invasive plants can spread quickly and disrupt the places people and wildlife depend on. A photo and a rough location turn an individual observation into useful community awareness.</Text></View>
 
   <View style={{marginTop:22,backgroundColor:colors.white,borderWidth:1,borderColor:colors.border,borderRadius:20,padding:16}}>
-   <Text style={{fontSize:16,color:colors.ink,fontWeight:'800'}}>How Spot the Spread works</Text>
+   <Text style={{fontSize:16,color:colors.ink,fontWeight:'800'}}>How InvAIsive Trace works</Text>
    {[['01','Photograph','Capture a clear photo of a plant you’re concerned about.'],['02','Check','Review an optional AI suggestion and confirm or correct the name.'],['03','Share','Add the location; the community can see the report while it awaits review.']].map(([number,title,body])=><View key={number} style={{flexDirection:'row',gap:12,marginTop:15}}><View style={{width:29,height:29,borderRadius:15,backgroundColor:'#E8EEE5',alignItems:'center',justifyContent:'center'}}><Text style={{fontSize:10,color:colors.green,fontWeight:'900'}}>{number}</Text></View><View style={{flex:1}}><Text style={{fontSize:13,color:colors.ink,fontWeight:'800'}}>{title}</Text><Text style={{fontSize:11,color:colors.muted,lineHeight:16,marginTop:2}}>{body}</Text></View></View>)}
   </View>
 
