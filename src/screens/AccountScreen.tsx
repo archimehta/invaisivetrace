@@ -59,6 +59,14 @@ export function AccountScreen({ vm }: { vm: SightingsVM }) {
             ['Verified', moderatorMetrics?.metrics.verifiedReports ?? '—'],
           ].map(([label, value]) => <View key={label} style={{ flex: 1, backgroundColor: '#F1EFE4', borderRadius: 15, padding: 12 }}><Text style={{ color: colors.ink, fontSize: 20, fontWeight: '900' }}>{value}</Text><Text style={{ color: colors.muted, fontSize: 10, marginTop: 4 }}>{label}</Text></View>)}
         </View>
+        <View style={{ flexDirection: 'row', gap: 9, marginTop: 8 }}>
+          {[
+            ['Inspections', moderatorMetrics?.metrics.inspections ?? '—'],
+            ['Treatments', moderatorMetrics?.metrics.treatments ?? '—'],
+            ['Follow-ups', moderatorMetrics?.metrics.followUps ?? '—'],
+          ].map(([label, value]) => <View key={label} style={{ flex: 1, backgroundColor: '#E8EEE5', borderRadius: 13, padding: 11 }}><Text style={{ color: colors.green, fontSize: 18, fontWeight: '900' }}>{value}</Text><Text style={{ color: colors.muted, fontSize: 9, marginTop: 4 }}>{label}</Text></View>)}
+        </View>
+        <Pressable onPress={() => vm.setTab('review')} style={{ marginTop: 14, backgroundColor: colors.green, borderRadius: 12, padding: 12, alignItems: 'center' }}><Text style={{ color: colors.white, fontSize: 12, fontWeight: '800' }}>Open moderator review queue →</Text></Pressable>
         <View style={{ marginTop: 15, backgroundColor: colors.white, borderRadius: 18, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' }}>
           <Text style={{ padding: 14, color: colors.ink, fontSize: 14, fontWeight: '800' }}>Member contributions</Text>
           {moderatorMetrics?.contributors.length ? moderatorMetrics.contributors.map((member) => <View key={member.id} style={{ paddingHorizontal: 14, paddingVertical: 12, borderTopWidth: 1, borderTopColor: colors.border }}>
