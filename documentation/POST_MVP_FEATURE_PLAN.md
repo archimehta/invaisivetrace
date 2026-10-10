@@ -1,109 +1,98 @@
 # Spot the Spread — Post-MVP Feature Plan
 
-## Purpose
+## Purpose and scope
 
-Capture potential improvements after the current MVP. This is a planning document only: none of the features below are approved for implementation yet. The MVP remains the working photo-assisted reporting, FISC matching, community map, and manual PocketBase moderation flow.
+This document records the agreed direction for improving the hackathon demo after its MVP. The app is for a private/demo setting, not a public release or hosted public service. The implementation status below tracks what is now in the codebase and what still needs validation.
 
-## Product direction
+## Implementation status
 
-Make community reports easier to assess, make reviewer decisions traceable, and measure what follow-up happens after a sighting. Keep the distinction clear between a submitted report, an expert-reviewed identification, and a documented field action.
+The first implementation pass is now in the codebase: multi-photo reports, reviewer sign-in and invitations, public activity history, report status review, impact events, inline report details, and separate community activity counts. TypeScript and backend syntax checks pass. A full PocketBase-backed and on-device run remains to be verified when the local PocketBase and Expo environments are available.
 
-## Feature areas
+The current MVP remains the baseline: Expo React Native, the existing backend and PocketBase catalog, Gemini-assisted tentative identification, and the community report map. Future work should preserve the distinction between a user-submitted identification and a verified report, and between a verified sighting and evidence of ecological impact.
 
-### 1. Multiple photos per report
+## Decisions locked in
 
-Let a reporter add several photos or angles while preparing a report. Show a thumbnail tray so they can review, remove, or reorder images before submission. One selected photo is used for Gemini identification; the rest are supporting evidence attached to the report.
+### Reporting photos
 
-Open design questions:
+- A report has one primary plant photo, used for Gemini identification or manual identification.
+- While completing the report, the reporter may add up to three supporting photos showing other angles or the surrounding scene. A report can therefore contain up to four photos total.
+- Each photo is limited to 5 MB.
+- All report photos are visible to users who can see that report. Strip image metadata before upload so embedded metadata does not expose unintended location or device details.
+- Reporters are anonymous. The app does not need a public reporter account system for this demo.
 
-- Maximum photos per report and total upload size. Suggested starting point: up to five photos, with a per-image size limit.
-- Whether to require a primary photo or choose the first image automatically.
-- Whether the user can run Gemini on another photo after the initial suggestion.
-- Image retention and removal rules.
+The MVP currently stores one photo per report. Future implementation will need a one-to-many photo representation and a migration path for existing reports. Gemini uses the primary photo; supporting images provide context to people reviewing the report.
 
-### 2. Expandable report cards and detail view
+### Trust, review, and public activity
 
-Keep the current feed scannable, but let a card open into a report detail view with:
+- New reports appear immediately with `unverified` status.
+- Reviewers are invite-only. A moderator grants reviewer roles.
+- Public report activity is visible to users. Attribute actions to a role and public reason (for example, “Moderator”), not to a reviewer's personal identity. Do not add private reviewer notes in this demo workflow.
+- Review states include `unverified`, `needs_review`, `verified`, and `rejected`.
+- Rejected reports are hidden from the public map and list. Their report and review history remain available to moderators unless a moderator deletes them.
+- Keep the existing location-consent rule: exact public coordinates are used only when the reporter explicitly opts in; otherwise use an approximate public pin.
 
-- Photo gallery and observation information.
-- Common and scientific names, FISC match/category/source, and the original Gemini suggestion where relevant.
-- Current review status and an activity timeline.
-- Location precision wording and the reporter's note.
-- Follow-up events, when present.
+### Impact and follow-up
 
-The timeline should distinguish public report history from moderator-only notes. Never expose reporter identity or precise coordinates without the appropriate consent.
+Only invited reviewers can add follow-up events. Supported event types are `inspection`, `treatment`, and `follow-up`. Every event requires a date and note; photos are optional.
 
-### 3. Trust, moderation, and review history
+Track counts separately for verified reports, inspections, treatments, and follow-up outcomes. A verified report is evidence of a reviewed sighting, not proof of treatment, eradication, or ecological improvement. Recurrence or no-regrowth can be shown as a recorded follow-up outcome, not as a broader claim beyond the submitted evidence.
 
-Replace the single-admin moderation pattern with clearly scoped roles and a traceable review workflow.
+### Report detail experience
 
-Potential capabilities:
+Tapping a report card expands its details inline in the scrollable list. The expanded content should provide a clean view of its photos, identification and catalog evidence, location precision, current status, public activity, and reviewer-recorded impact events.
 
-- Roles such as reporter, moderator, and trusted reviewer, with least-privilege access.
-- A review queue for unverified reports, filters for status/category/age, and duplicate candidates.
-- Review actions that can correct the identification, set `verified` or `needs_review`, or flag a report as a duplicate or unsuitable.
-- An append-only audit history containing reviewer, timestamp, action, previous value, new value, and reason.
-- Publicly visible review events that explain status changes, while private moderator notes remain restricted.
-- An appeal or second-review path for disputed identifications.
+### Retention
 
-Reviewer labels must describe the account's app role. Do not imply a partner organization, professional credential, or endorsement unless verified and authorized.
+Reports and their public review history remain available until a moderator deletes them. Moderator deletion removes them from public views as well.
 
-### 4. Follow-up and measurable impact
+## Proposed future behavior and data changes
 
-Record field actions as separate events rather than treating a verified sighting as proof of environmental impact.
+These are planning-level requirements for a later implementation phase:
 
-Possible follow-up events:
+- Replace the singular report photo in the app/API representation with an ordered collection, identifying one image as primary and the rest as supporting images.
+- Return the public photo collection and public activity timeline with report details, subject to report visibility and the existing coordinate-consent behavior.
+- Represent review actions and impact events as timestamped records. Public review activity identifies the actor's role and includes a public reason; it does not expose personal reviewer identity or private notes.
+- Represent impact events separately from review status so a status change cannot be mistaken for treatment or an outcome.
+- Update report cards to expand inline and show the report's details and event history.
+- Preserve existing reports during the future migration from the MVP's single-photo field.
 
-- Site inspected, with date and reviewer.
-- Treatment or removal attempted, with method and area/quantity where practical.
-- Follow-up check, with observed regrowth or no regrowth.
-- Before/after photos and a concise outcome note.
+The precise PocketBase collection names, endpoint shapes, reviewer credential mechanics, image-processing library, and migration execution plan remain implementation design choices for the future work phase.
 
-Candidate dashboard measures:
+## Suggested future sequencing
 
-- Reports submitted and reports verified, shown separately.
-- Unique sites inspected and time from report to first review/inspection.
-- Sites with treatment recorded and sites with follow-up completed.
-- Follow-up outcomes, including recurrence, with the observation window stated.
+1. Design the report details expansion and multi-photo flow together so users understand which image is analyzed and how supporting views help reviewers.
+2. Design public review activity and the invite-only reviewer workflow, including state transitions and rejection visibility.
+3. Design follow-up events and impact summaries with clear labels that avoid overstating results.
+4. Plan the data migration from one photo to an ordered photo set and add acceptance scenarios before implementation.
+5. Implement and demo these features incrementally against the existing local demo stack.
 
-Avoid claiming plants were eradicated or ecological conditions improved unless the app has evidence and a defined verification process. Show coverage and uncertainty alongside counts.
+## Acceptance scenarios for future implementation
 
-### 5. Additional ideas for later prioritization
+- A report can include one primary photo and up to three additional photos; an attempt to add a fifth photo or a photo larger than 5 MB is handled clearly.
+- Gemini analyzes the primary image. The reporter can still identify manually if Gemini is unavailable.
+- Every uploaded photo has metadata stripped before storage and is visible wherever the report is publicly visible.
+- A new report appears as unverified. A reviewer can change its status and provide a public reason; activity displays the reviewer role without personal identity.
+- A rejected report disappears from the public map and list while remaining available to moderators until deleted.
+- A reviewer can record an inspection, treatment, or follow-up with a date and note, and optionally attach photos.
+- Summary counts distinguish verified reports, inspections, treatments, and follow-up outcomes.
+- Expanding a report card inline shows its details, public history, and impact events.
+- Existing MVP reports remain readable after the photo-data migration.
+- Public coordinates remain exact only when the reporter opted in.
 
-- Offline report drafts and a reliable upload queue.
-- Duplicate-sighting suggestions based on species, time, and approximate distance.
-- Map filters, clusters, and trends by time/status/species.
-- Notifications for review outcomes or nearby verified sightings, with explicit opt-in.
-- Catalog refresh workflow with source/version history and review before updates go live.
-- Abuse prevention, account recovery, data export/retention controls, and deployment hardening before any public launch.
+## Later ideas, lower priority
 
-## Suggested delivery order
+These ideas are not part of the locked initial post-MVP scope and should be ranked after the features above:
 
-1. Agree on roles, visibility, photo limits, and what counts as an impact event.
-2. Design the report, media, audit-event, and follow-up-event data model, including migration from the MVP's single-photo field.
-3. Add moderator access control and review history before expanding public reporting.
-4. Add multi-photo capture and the report detail/timeline experience.
-5. Add field follow-up events and impact summaries.
-6. Consider offline support, alerts, and analytics after validating the core workflow with reviewers and reporters.
+- Offline drafts and upload queue.
+- Duplicate report detection.
+- Map filters, clustering, and trend views.
+- Opt-in notifications.
+- A catalog refresh workflow.
+- Abuse hardening, account recovery, and data export before any actual public launch.
 
-This order is a proposal. It should change if the team identifies a more important user need or a confirmed partner workflow.
+## Explicitly out of scope for this demo plan
 
-## Decisions still open
-
-1. **Photo set:** maximum photos, per-image/total size limits, and which image Gemini analyzes.
-2. **Activity visibility:** which events are public, which notes are moderator-only, and whether reviewer names are shown.
-3. **Reviewer trust:** who can receive reviewer privileges and how credentials or expertise are described/verified.
-4. **Review states:** whether to add `rejected`, `duplicate`, or appeal states, and who can apply them.
-5. **Impact definitions:** which inspection/treatment outcomes can be recorded and what evidence is required.
-6. **Location and images:** retention period, deletion requests, and who can access original photos and exact coordinates.
-7. **Identity:** whether reports stay anonymous or support accounts and reporter-owned edit/delete requests.
-8. **Deployment:** whether the next version remains a local demo or targets a hosted service and public users.
-
-## Initial success criteria to refine
-
-- Reviewers can explain and reproduce every status or identification change from the audit history.
-- A reporter can attach the intended photo angles without losing track of which photo Gemini analyzed.
-- A community member can distinguish unverified reports, verified reports, and field follow-up outcomes.
-- Impact summaries count only documented events and display the date range and coverage.
-- Public views continue to omit reporter identity and protect exact location unless the reporter opts in.
-
+- Public release, public hosting, or a production service.
+- A reporter account system.
+- Claims of participation or endorsement by Orange County Ecological Services or another organization unless a partnership is established.
+- Any app-code, database-schema, or MVP behavior changes as part of this planning document update.
