@@ -1,5 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Location from 'expo-location';
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Image, Linking, Platform, Pressable, SafeAreaView, ScrollView, StatusBar as NativeStatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -19,6 +20,23 @@ const catalog = catalogJson as Species[];
 const API_URL = (process.env.EXPO_PUBLIC_API_URL || 'http://127.0.0.1:8787').replace(/\/$/, '');
 const ORLANDO: Coordinate = { latitude: 28.5383, longitude: -81.3792 };
 const colors = { ink: '#18352B', muted: '#6A7B72', green: '#28734D', pale: '#EAF4E9', lime: '#C9E9A9', paper: '#F6F8F3', white: '#FFFFFF', border: '#DFE8DE', amber: '#8B5A12', amberPale: '#FFF4DB', red: '#9B443C' };
+
+async function uploadPhoto<T>(path: string, photo: ImagePicker.ImagePickerAsset, parameters: Record<string, string> = {}): Promise<T> {
+  const response = await FileSystem.uploadAsync(`${API_URL}${path}`, photo.uri, {
+    httpMethod: 'POST',
+    uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+    fieldName: 'photo',
+    mimeType: photo.mimeType || 'image/jpeg',
+    parameters,
+  });
+  let payload: any;
+  try { payload = JSON.parse(response.body); }
+  catch { throw new Error(`The server returned an unreadable response (${response.status}).`); }
+  if (response.status < 200 || response.status >= 300) {
+    throw new Error(payload?.error || `Upload failed (${response.status}).`);
+  }
+  return payload as T;
+}
 
 function htmlSafe(value: unknown) {
   return String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!);
@@ -132,11 +150,7 @@ export default function App() {
     setIsIdentifying(true);
     setGuessMessage('Sending photo for tentative identification…');
     try {
-      const body = new FormData();
-      body.append('photo', { uri: photo.uri, name: photo.fileName || 'plant.jpg', type: photo.mimeType || 'image/jpeg' } as unknown as Blob);
-      const response = await fetch(`${API_URL}/api/identify`, { method: 'POST', body });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || 'Identification is unavailable.');
+      const payload = await uploadPhoto<PlantGuess>('/api/identify', photo);
       if (!payload || typeof payload !== 'object') throw new Error('Identification returned an unreadable response. Search the catalog or enter a plant name manually.');
       setGuess(payload);
       if (payload.isPlant === false) {
@@ -188,19 +202,16 @@ export default function App() {
     if (!location) return Alert.alert('Choose a location', 'Use GPS or tap the map to place the sighting pin.');
     setIsSubmitting(true);
     try {
-      const body = new FormData();
-      body.append('photo', { uri: photo.uri, name: photo.fileName || 'plant.jpg', type: photo.mimeType || 'image/jpeg' } as unknown as Blob);
-      body.append('speciesName', speciesName);
-      body.append('scientificName', scientificName);
-      body.append('geminiSuggestion', guess ? `${guess.commonName || ''} ${guess.scientificName || ''}`.trim() : '');
-      body.append('latitude', String(location.latitude));
-      body.append('longitude', String(location.longitude));
-      body.append('observedAt', new Date().toISOString());
-      body.append('note', note);
-      body.append('exactLocationPublic', String(exactLocationPublic));
-      const response = await fetch(`${API_URL}/api/reports`, { method: 'POST', body });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Could not submit report.');
+      await uploadPhoto('/api/reports', photo, {
+        speciesName,
+        scientificName,
+        geminiSuggestion: guess ? `${guess.commonName || ''} ${guess.scientificName || ''}`.trim() : '',
+        latitude: String(location.latitude),
+        longitude: String(location.longitude),
+        observedAt: new Date().toISOString(),
+        note,
+        exactLocationPublic: String(exactLocationPublic),
+      });
       await refreshReports();
       setPhoto(null); setGuess(null); setSelectedSpecies(null); setManualName(''); setManualMode(false); setSearch(''); setNote(''); setLocation(null); setExactLocationPublic(false); setTab('map');
       Alert.alert('Report submitted', 'Your sighting is on the community map as unverified and can now be reviewed.');

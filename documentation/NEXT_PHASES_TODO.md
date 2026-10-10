@@ -25,9 +25,10 @@ The mobile app, API, and FISC catalog scaffold are in the workspace. This checkl
 
 ## Phase 3: Verify identification and catalog behavior
 
-Progress: API catalog search works (Hydrilla returns Category I; an unknown search returns no matches), and the identify endpoint gives a clear manual-identification fallback when Gemini is unset. Live Gemini identification still requires a key in `backend/.env`. Retest camera and photo-library access on the iPhone after the permission fix.
+Progress: API catalog search works (Hydrilla returns Category I; an unknown search returns no matches), and reports now load successfully. The backend health check confirms Gemini is enabled after loading the key. Retest camera and photo-library access on the iPhone, then try a clear plant photo through Gemini.
 
-- [ ] Configure Gemini on the backend and try a clear plant photo.
+- [x] Configure Gemini on the backend (`/api/health` reports `geminiEnabled: true`).
+- [ ] Try a clear plant photo through Gemini and inspect the tentative suggestion.
 - [ ] Confirm Gemini's result is labeled tentative and requires user confirmation.
 - [ ] Correct a wrong suggestion by searching the FISC catalog.
 - [ ] Enter a plant name absent from FISC and confirm it remains eligible for reporting as a possible unlisted invasive.
