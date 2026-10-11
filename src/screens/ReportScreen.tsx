@@ -63,13 +63,13 @@ export function ReportScreen({vm}:{vm:SightingsVM}) {
 
         <TextInput style={styles.searchInput} placeholder="Search common or scientific name" placeholderTextColor="#91A098" value={search} onChangeText={setSearch} autoCapitalize="none" />
 
-        <View style={styles.speciesList}>{filteredSpecies.map((species) => <Pressable key={species.id} onPress={() => { setSelectedSpecies(species); setManualName(''); }} style={[styles.speciesChoice, selectedSpecies?.id === species.id && styles.speciesChoiceActive]}>
+        <View style={[styles.speciesList,{height:Math.min(320,Math.max(55,filteredSpecies.length*55))}]}><ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">{filteredSpecies.map((species) => <Pressable key={species.id} onPress={() => { setSelectedSpecies(species); setManualName(''); }} style={[styles.speciesChoice, selectedSpecies?.id === species.id && styles.speciesChoiceActive]}>
 
           <View style={{ flex: 1 }}><Text style={styles.speciesCommon}>{species.commonNames[0] || species.scientificName}</Text><Text style={styles.speciesScientific}>{species.scientificName}{species.commonNames.length > 1 ? ` · +${species.commonNames.length - 1} names` : ''}</Text></View><Text style={styles.categoryPill}>{species.category.replace('Category ', 'Cat. ')}</Text>
 
         </Pressable>)}
 
-        {!filteredSpecies.length ? <Text style={styles.helperText}>No FISC list match. Choose “Possible unlisted” to record it for expert review.</Text> : null}</View>
+        {!filteredSpecies.length ? <Text style={styles.helperText}>No FISC list match. Choose “Possible unlisted” to record it for expert review.</Text> : null}</ScrollView></View>
 
         {selectedSpecies ? <View style={styles.listMatchCard}><Text style={styles.listMatchHeading}>FISC {selectedSpecies.category} · Florida invasive plant list</Text><Text style={styles.sourceText}>This match means the plant is listed in this FISC category. <Text style={styles.linkText} onPress={() => { void Linking.openURL(selectedSpecies.sourceUrl).catch(() => Alert.alert('Could not open source', 'Check that your phone has an internet connection.')); }}>View source ↗</Text></Text></View> : null}
 

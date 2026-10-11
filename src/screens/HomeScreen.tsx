@@ -9,19 +9,19 @@ export function HomeScreen({vm}:{vm:SightingsVM}) {
  const verified=reports.filter(report=>report.reviewStatus==='verified').length;
  const impact=summarizeImpact(reports);
  return <ScrollView contentContainerStyle={[styles.content,{paddingTop:0,paddingBottom:34}]}>
-  <View style={{backgroundColor:'#183E2E',marginHorizontal:-20,paddingHorizontal:23,paddingTop:29,paddingBottom:25,borderBottomLeftRadius:30,borderBottomRightRadius:30}}>
+  <View style={{backgroundColor:'#183E2E',marginHorizontal:-20,paddingHorizontal:23,paddingTop:20,paddingBottom:19,borderBottomLeftRadius:26,borderBottomRightRadius:26}}>
    <BrandWordmark />
-   <Text style={{fontSize:9,color:'#C9DDBE',fontWeight:'800',letterSpacing:1.7,marginTop:5}}>FLORIDA · COMMUNITY FIELD GUIDE</Text>
-   <Text style={{fontSize:34,lineHeight:40,color:'#FFFDF3',fontWeight:'700',marginTop:18,fontFamily:'Georgia'}}>Small sightings.{ '\n' }A healthier home.</Text>
-   <Text style={{fontSize:14,lineHeight:21,color:'#D4E2D5',marginTop:12}}>Our mission is to help neighbors notice and document invasive plants early, so local communities can better protect Florida’s natural places.</Text>
-   <View style={{marginTop:20}}><ActionButton title="Report a plant  →" onPress={()=>setTab('report')}/></View>
+   <Text style={{fontSize:9,color:'#C9DDBE',fontWeight:'800',letterSpacing:1.7,marginTop:3}}>FLORIDA · COMMUNITY FIELD GUIDE</Text>
+   <Text style={{fontSize:30,lineHeight:35,color:'#FFFDF3',fontWeight:'700',marginTop:12,fontFamily:'Georgia'}}>Small sightings.{ '\n' }A healthier home.</Text>
+   <Text style={{fontSize:13,lineHeight:19,color:'#D4E2D5',marginTop:8}}>Our mission is to help neighbors notice and document invasive plants early, so local communities can better protect Florida’s natural places.</Text>
+   <View style={{marginTop:14}}><ActionButton title="Report a plant  →" onPress={()=>setTab('report')}/></View>
   </View>
 
-  <ScreenGuide items={[
+  <View style={{marginTop:16}}><ScreenGuide items={[
    {label:'Mission banner',detail:'Explains the local conservation goal and links straight to the report form.',scope:'This view'},
    {label:'Community counts',detail:'Show all shared sightings and how many moderators have confirmed.',scope:'Shared data'},
    {label:'Explore shortcuts',detail:'Open the map or the searchable report list without using the bottom tabs.',scope:'This view'},
-  ]}/>
+  ]}/></View>
 
   <View style={{marginTop:22,flexDirection:'row',gap:10}}>
    <View style={{flex:1,backgroundColor:'#E8EEE5',borderRadius:17,padding:14}}><Text style={{fontSize:24,color:colors.green,fontWeight:'800'}}>{reports.length}</Text><Text style={{fontSize:11,color:colors.muted,marginTop:4}}>community sightings</Text></View>

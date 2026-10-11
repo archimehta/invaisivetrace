@@ -978,39 +978,20 @@ app.post('/api/reports/:id/review', requireReviewer, async (req, res, next) => {
   try {
     const report = await pb.collection('reports').getOne(req.params.id);
     const status = String(req.body?.status || '');
-    const reason = String(req.body?.reason || '').trim().slice(0, 500);
     if (!allowedStatuses.has(status)) return res.status(400).json({ error: 'Choose a supported review status.' });
-    const speciesName = String(req.body?.speciesName || '').trim();
-    const hasCoverage = Object.hasOwn(req.body || {}, 'coverageAreaSqFt');
-    if (hasCoverage && req.reviewer.role !== 'moderator') return res.status(403).json({ error: 'Only a moderator can update coverage for estimates.' });
-    const requestedCoverage = hasCoverage ? (req.body.coverageAreaSqFt === null || req.body.coverageAreaSqFt === '' ? 0 : Number(req.body.coverageAreaSqFt)) : Number(report.coverageAreaSqFt || 0);
-    if (hasCoverage && requestedCoverage !== 0 && (!Number.isFinite(requestedCoverage) || requestedCoverage < 1 || requestedCoverage > COST_MAX_AREA_SQFT)) return res.status(400).json({ error: `Coverage must be between 1 and ${COST_MAX_AREA_SQFT.toLocaleString()} square feet.` });
-    if (status === report.reviewStatus && !speciesName && !hasCoverage) return res.status(400).json({ error: 'Choose a status change, provide a corrected identification, or update coverage.' });
+    if (status === report.reviewStatus) return res.status(400).json({ error: 'Choose a status change.' });
     if (status !== report.reviewStatus && !allowedTransitions[report.reviewStatus]?.has(status)) return res.status(409).json({ error: `Cannot move a ${report.reviewStatus} report to ${status}.` });
-    if (!reason) return res.status(400).json({ error: 'Add a public reason for this review action.' });
-    const fields = { reviewStatus: status };
-    const scientificName = String(req.body?.scientificName || '').trim();
-    if (speciesName) {
-      const match = findSpecies(speciesName) || findSpecies(scientificName);
-      fields.speciesName = speciesName.slice(0, 240);
-      fields.scientificName = (scientificName || match?.scientificName || '').slice(0, 240);
-      fields.speciesId = match?.id || '';
-      fields.listedCategory = match?.category || '';
-      fields.isFiscListed = Boolean(match);
-    }
-    if (hasCoverage) fields.coverageAreaSqFt = requestedCoverage;
-    const speciesChanged = Boolean(speciesName) && (speciesName !== report.speciesName || (scientificName && scientificName !== report.scientificName));
-    const coverageChanged = hasCoverage && requestedCoverage !== Number(report.coverageAreaSqFt || 0);
     const statusChanged = status !== report.reviewStatus;
-    if (speciesChanged || coverageChanged || statusChanged) {
+    const fields = { reviewStatus: status };
+    if (statusChanged) {
       fields.estimateInputVersion = currentVersion(report) + 1;
-      fields.estimateStatus = status === 'verified' ? 'not_requested' : 'not_requested';
+      fields.estimateStatus = 'not_requested';
       fields.estimateReason = status === 'verified' ? '' : 'not_verified';
       fields.estimateLowUsd = 0; fields.estimateHighUsd = 0; fields.estimateMethod = ''; fields.estimateRationale = '';
       fields.estimateAssumptions = ''; fields.estimateSources = []; fields.estimateGeneratedAt = '';
     }
     const updated = await pb.collection('reports').update(report.id, fields);
-    if (speciesChanged || coverageChanged || statusChanged) await supersedeJobs(report.id);
+    if (statusChanged) await supersedeJobs(report.id);
     let current = updated;
     if (status === 'verified') {
       const eligibility = estimateEligibility(updated);
@@ -1019,14 +1000,45 @@ app.post('/api/reports/:id/review', requireReviewer, async (req, res, next) => {
         try { current = await queueEstimate(updated); }
         catch { current = await pb.collection('reports').update(report.id, { estimateStatus: 'unavailable', estimateReason: 'queue_failed' }).catch(() => updated); }
       }
-      else if (coverageChanged || speciesChanged) current = await pb.collection('reports').update(report.id, { estimateStatus: 'not_requested', estimateReason: '' });
     } else if (statusChanged) {
       current = await pb.collection('reports').update(report.id, { estimateStatus: 'not_requested', estimateReason: 'not_verified' });
     }
-    await addActivity(report.id, { eventType: 'review_status_changed', actorRole: req.reviewer.role, publicReason: reason, fromStatus: report.reviewStatus, toStatus: status });
-    if (speciesName && speciesName !== report.speciesName) await addActivity(report.id, { eventType: 'identification_corrected', actorRole: req.reviewer.role, publicReason: `Identification updated to ${speciesName}.`, fromStatus: status, toStatus: status });
+    if (statusChanged) {
+      const publicReason = status === 'verified' ? 'Plant sighting confirmed by a moderator.' : status === 'rejected' ? 'Report rejected by a moderator.' : status === 'needs_review' ? 'Report flagged for additional review.' : 'Report returned to the unverified queue.';
+      await addActivity(report.id, { eventType: 'review_status_changed', actorRole: req.reviewer.role, publicReason, fromStatus: report.reviewStatus, toStatus: status });
+    }
     const projected = await projectReport(current, `http://${req.get('host')}`, { includePrivateLocation: true, includeReporter: true });
     res.json({ report: projected });
+  } catch (error) { next(error); }
+});
+
+app.post('/api/reports/:id/identification-check', requireModerator, async (req, res, next) => {
+  try {
+    if (typeof req.body?.confirmed !== 'boolean') return res.status(400).json({ error: 'Choose Yes or No for the plant identification.' });
+    const report = await pb.collection('reports').getOne(req.params.id);
+    const status = req.body.confirmed ? report.reviewStatus : 'needs_review';
+    if (!req.body.confirmed && report.reviewStatus !== 'needs_review' && !allowedTransitions[report.reviewStatus]?.has('needs_review')) {
+      return res.status(409).json({ error: `Cannot flag a ${report.reviewStatus} report for additional review.` });
+    }
+    let current = report;
+    if (status !== report.reviewStatus) {
+      current = await pb.collection('reports').update(report.id, {
+        reviewStatus: status,
+        estimateInputVersion: currentVersion(report) + 1,
+        estimateStatus: 'not_requested', estimateReason: 'not_verified',
+        estimateLowUsd: 0, estimateHighUsd: 0, estimateMethod: '', estimateRationale: '',
+        estimateAssumptions: '', estimateSources: [], estimateGeneratedAt: '',
+      });
+      await supersedeJobs(report.id);
+    }
+    const publicReason = req.body.confirmed
+      ? 'Moderator confirmed the plant identification matches the photo.'
+      : 'Moderator flagged the plant identification as not matching the photo.';
+    await addActivity(report.id, {
+      eventType: 'identification_checked', actorRole: req.reviewer.role, publicReason,
+      fromStatus: report.reviewStatus, toStatus: status,
+    });
+    res.json({ report: await projectReport(current, `http://${req.get('host')}`, { includePrivateLocation: true, includeReporter: true }) });
   } catch (error) { next(error); }
 });
 
@@ -1057,37 +1069,6 @@ app.post('/api/reports/:id/removal-estimate', requireModerator, async (req, res,
     await supersedeJobs(report.id);
     const queued = await queueEstimate(report, { force: true });
     res.status(202).json({ report: await projectReport(queued, `http://${req.get('host')}`, { includePrivateLocation: true, includeReporter: true }) });
-  } catch (error) { next(error); }
-});
-
-app.patch('/api/reports/:id/location', requireModerator, async (req, res, next) => {
-  try {
-    const report = await pb.collection('reports').getOne(req.params.id);
-    const latitude = Number(req.body?.latitude); const longitude = Number(req.body?.longitude);
-    if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) return res.status(400).json({ error: 'Choose a valid map location.' });
-    if (latitude === Number(report.latitude) && longitude === Number(report.longitude)) return res.status(400).json({ error: 'Move the map pin before saving the location.' });
-    const county = resolveFloridaCounty(latitude, longitude);
-    await supersedeJobs(report.id);
-    const updated = await pb.collection('reports').update(report.id, {
-      latitude, longitude,
-      publicLatitude: report.exactLocationPublic ? latitude : roundCoordinate(latitude),
-      publicLongitude: report.exactLocationPublic ? longitude : roundCoordinate(longitude),
-      estimateInputVersion: currentVersion(report) + 1,
-      estimateStatus: 'not_requested', estimateReason: '', estimateLowUsd: 0, estimateHighUsd: 0,
-      estimateMethod: '', estimateRationale: '', estimateAssumptions: '', estimateSources: [], estimateGeneratedAt: '',
-      estimateCounty: county?.name || '', estimateCountyGeoid: county?.geoid || '',
-    });
-    let current = updated;
-    if (updated.reviewStatus === 'verified') {
-      const eligibility = estimateEligibility(updated);
-      if (eligibility.status) current = await pb.collection('reports').update(report.id, { estimateStatus: eligibility.status, estimateReason: eligibility.reason });
-      else if (Number(updated.coverageAreaSqFt) > 0) {
-        try { current = await queueEstimate(updated); }
-        catch { current = await pb.collection('reports').update(report.id, { estimateStatus: 'unavailable', estimateReason: 'queue_failed' }).catch(() => updated); }
-      }
-    }
-    await addActivity(report.id, { eventType: 'location_corrected', actorRole: req.reviewer.role, publicReason: 'Report location corrected by a moderator.' });
-    res.json({ report: await projectReport(current, `http://${req.get('host')}`, { includePrivateLocation: true, includeReporter: true }) });
   } catch (error) { next(error); }
 });
 

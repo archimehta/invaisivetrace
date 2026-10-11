@@ -5,16 +5,29 @@ import { SightingsVM } from '../hooks/useSightings';
 
 const statusLabel = (status: string) => status === 'verified' ? 'Verified' : status === 'needs_review' ? 'Needs review' : status === 'unverified' ? 'Unverified' : status.replaceAll('_', ' ');
 const eventLabel = (type: string) => type === 'follow-up' ? 'Follow-up' : type[0].toUpperCase() + type.slice(1);
+const reportGenus = (report: Report) => {
+  const genus = report.scientificName?.trim().split(/\s+/)[0];
+  return genus ? `${genus[0].toUpperCase()}${genus.slice(1)}` : 'Unknown genus';
+};
 
 export function SightingsScreen({ vm }: { vm: SightingsVM }) {
-  const { reports, setTab, tab, refreshReports } = vm;
+  const { reports, setTab, tab, refreshReports, sightingsSearchRequest, clearSightingsSearchRequest } = vm;
   const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState<'all' | 'unverified' | 'needs_review' | 'verified'>('all');
+  const [filter, setFilter] = useState<'all' | 'unverified' | 'needs_review' | 'verified' | 'rejected'>('all');
+  const [genusFilter, setGenusFilter] = useState('all');
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const refreshRef = useRef(refreshReports);
   refreshRef.current = refreshReports;
   const selectedReport = reports.find((report) => report.id === selectedReportId) || null;
   const hasPendingEstimates = reports.some((report) => report.removalEstimate?.status === 'pending');
+  useEffect(() => {
+    if (!sightingsSearchRequest) return;
+    setQuery(sightingsSearchRequest.query);
+    setFilter('all');
+    setGenusFilter('all');
+    setSelectedReportId(sightingsSearchRequest.reportId);
+    clearSightingsSearchRequest();
+  }, [sightingsSearchRequest?.requestId, clearSightingsSearchRequest]);
   useEffect(() => {
     if (tab !== 'sightings' || !hasPendingEstimates) return;
     let remainingMs = 120_000;
@@ -37,7 +50,8 @@ export function SightingsScreen({ vm }: { vm: SightingsVM }) {
     });
     return () => { clearInterval(timer); appState.remove(); };
   }, [tab, hasPendingEstimates]);
-  const visible = useMemo(() => reports.filter((report) => (filter === 'all' || report.reviewStatus === filter) && [report.speciesName, report.scientificName || '', report.note || ''].join(' ').toLowerCase().includes(query.toLowerCase())), [reports, filter, query]);
+  const genera = useMemo(() => [...new Set(reports.map(reportGenus))].sort((a, b) => a.localeCompare(b)), [reports]);
+  const visible = useMemo(() => reports.filter((report) => (filter === 'all' || report.reviewStatus === filter) && (genusFilter === 'all' || reportGenus(report) === genusFilter) && [report.speciesName, report.scientificName || '', report.note || ''].join(' ').toLowerCase().includes(query.toLowerCase())), [reports, filter, genusFilter, query]);
 
   return <>
     <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -46,12 +60,16 @@ export function SightingsScreen({ vm }: { vm: SightingsVM }) {
       <Text style={styles.bodyCopy}>Explore reported plants. Open a sighting for identification, review history and removal estimates.</Text>
       <ScreenGuide items={[
         {label:'Search',detail:'Matches plant names, scientific names and reporter notes in the loaded reports.',scope:'This view'},
-        {label:'Status filters',detail:'Narrow the list by moderator review state. Filtering never changes a report.',scope:'This view'},
+        {label:'Review status filters',detail:'Show all, verified, unverified, needs-review or rejected reports.',scope:'This view'},
+        {label:'Genus filter',detail:'Narrow reports to a scientific plant genus. Genus is taken from the scientific name.',scope:'This view'},
         {label:'Report cards',detail:'Show a short summary. Tap a card to open the full detail sheet with photos, location privacy, activity and fieldwork.',scope:'Shared data'},
         {label:'Estimate details',detail:'When available, the detail sheet shows the AI ballpark; it is not a contractor quote.',scope:'Shared data'},
       ]} />
       <View style={{ backgroundColor: colors.white, borderRadius: 15, paddingHorizontal: 14, marginBottom: 11, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center' }}><Text style={{ fontSize: 17, marginRight: 8 }}>⌕</Text><TextInput accessibilityLabel="Search sightings by plant name or notes" placeholder="Search plants or notes" value={query} onChangeText={setQuery} placeholderTextColor="#8A988E" style={{ minHeight: 48, fontSize: 16, color: colors.ink, flex: 1 }} /></View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginBottom: 16 }}>{(['all', 'unverified', 'needs_review', 'verified'] as const).map((value) => <Pressable key={value} onPress={() => setFilter(value)} style={{ paddingVertical: 9, paddingHorizontal: 13, borderRadius: 18, backgroundColor: filter === value ? colors.green : '#E8EDE4' }}><Text style={{ color: filter === value ? colors.white : colors.ink, fontSize: 11, fontWeight: '700' }}>{value === 'all' ? 'All reports' : value === 'unverified' ? 'Unverified' : value === 'needs_review' ? 'Needs review' : 'Verified'}</Text></Pressable>)}</ScrollView>
+      <Text style={{ color: colors.ink, fontSize: 11, fontWeight: '800', marginBottom: 7 }}>Review status</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 12 }}>{(['all', 'unverified', 'needs_review', 'verified', 'rejected'] as const).map((value) => <Pressable key={value} accessibilityRole="button" accessibilityState={{ selected: filter === value }} onPress={() => setFilter(value)} style={{ paddingVertical: 9, paddingHorizontal: 13, borderRadius: 18, backgroundColor: filter === value ? colors.green : '#E8EDE4' }}><Text style={{ color: filter === value ? colors.white : colors.ink, fontSize: 11, fontWeight: '700' }}>{value === 'all' ? 'All reports' : value === 'needs_review' ? 'Needs review' : statusLabel(value)}</Text></Pressable>)}</ScrollView>
+      <Text style={{ color: colors.ink, fontSize: 11, fontWeight: '800', marginBottom: 7 }}>Plant genus</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 15 }}>{['all', ...genera].map((genus) => <Pressable key={genus} accessibilityRole="button" accessibilityState={{ selected: genusFilter === genus }} onPress={() => setGenusFilter(genus)} style={{ paddingVertical: 8, paddingHorizontal: 12, borderRadius: 16, backgroundColor: genusFilter === genus ? '#DDE8D9' : colors.paper, borderWidth: 1, borderColor: genusFilter === genus ? '#B9CCB3' : colors.border }}><Text style={{ color: genusFilter === genus ? colors.green : colors.ink, fontSize: 10, fontWeight: '800' }}>{genus === 'all' ? 'All genera' : genus}</Text></Pressable>)}</ScrollView>
       <View style={[styles.sectionHead, { marginBottom: 12 }]}><View><Text style={styles.sectionTitle}>Recent reports</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>Reports stay unverified until reviewed.</Text></View><Text style={styles.sectionMeta}>{visible.length} found</Text></View>
       {visible.length === 0 ? <View style={styles.emptyCard}><Text style={styles.emptyTitle}>{reports.length ? 'No matching sightings' : 'No sightings yet'}</Text><Text style={styles.emptyText}>{reports.length ? 'Try another search or filter.' : 'Share the first report to start building a community picture of local invasive plants.'}</Text><ActionButton title="Report a plant" onPress={() => setTab('report')} /></View> : visible.map((report) => <ReportCard key={report.id} report={report} onOpen={() => setSelectedReportId(report.id)} />)}
       <View style={styles.disclaimer}><Text style={styles.disclaimerTitle}>A list match is useful. A missing match is not a verdict.</Text><Text style={styles.disclaimerText}>The FISC catalog is a reference list, not an exhaustive inventory. Unlisted plants can still be reported as possible invasives and await expert review.</Text></View>
