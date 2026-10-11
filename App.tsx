@@ -14,7 +14,7 @@ import { colors } from './src/components/shared';
 export default function App(){
  const vm=useSightings();
  const tabs: {key: typeof vm.tab; icon: string; label: string}[] = vm.authUser?.role==='moderator'
-  ? [{key:'home',icon:'⌂',label:'Home'},{key:'map',icon:'⌖',label:'Explore'},{key:'sightings',icon:'▤',label:'Sightings'},{key:'report',icon:'＋',label:'Report'},{key:'metrics',icon:'✦',label:'Metrics'},{key:'review',icon:'✓',label:'Review'}]
+  ? [{key:'home',icon:'⌂',label:'Home'},{key:'map',icon:'⌖',label:'Explore'},{key:'sightings',icon:'▤',label:'Sightings'},{key:'metrics',icon:'✦',label:'Metrics'},{key:'review',icon:'✓',label:'Review'},{key:'report',icon:'＋',label:'Report'}]
   : [{key:'home',icon:'⌂',label:'Home'},{key:'map',icon:'⌖',label:'Explore'},{key:'report',icon:'＋',label:'Report'},{key:'sightings',icon:'▤',label:'Sightings'},{key:'metrics',icon:'✦',label:'Metrics'}];
  return <SafeAreaView style={{flex:1,backgroundColor:colors.paper,paddingTop:Platform.OS==='android'?NativeStatusBar.currentHeight:0}}>
   <StatusBar style="dark" />
