@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Spot the Spread",
-    "slug": "spot-the-spread",
+    "name": "InvAIsive Trace",
+    "slug": "invaisive-trace",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -19,14 +19,14 @@
       [
         "expo-image-picker",
         {
-          "cameraPermission": "Allow Spot the Spread to take plant photos for reports.",
-          "photosPermission": "Allow Spot the Spread to select plant photos for reports."
+          "cameraPermission": "Allow InvAIsive Trace to take plant photos for reports.",
+          "photosPermission": "Allow InvAIsive Trace to select plant photos for reports."
         }
       ],
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Allow Spot the Spread to attach your location to a plant sighting."
+          "locationWhenInUsePermission": "Allow InvAIsive Trace to attach your location to a plant sighting."
         }
       ],
       "expo-status-bar"

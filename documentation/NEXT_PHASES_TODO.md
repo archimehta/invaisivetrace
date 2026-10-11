@@ -1,4 +1,4 @@
-# Spot the Spread — Next Phases To-do List
+# InvAIsive Trace — Next Phases To-do List
 
 The mobile app, API, and FISC catalog scaffold are in the workspace. This checklist takes the project from scaffold to a working, judge-ready MVP.
 

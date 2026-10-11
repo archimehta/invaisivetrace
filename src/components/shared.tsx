@@ -9,6 +9,13 @@ export type Species = (typeof catalogJson)[number];
 export type ReportPhoto = { id: string; url: string; isPrimary: boolean; position: number };
 export type ReportActivity = { id: string; type: string; actorRole: string; publicReason?: string; fromStatus?: string; toStatus?: string; occurredAt: string };
 export type ImpactEvent = { id: string; type: 'inspection' | 'treatment' | 'follow-up'; date: string; note: string; actorRole: string; photos: string[] };
+export type RemovalEstimateStatus = 'not_requested' | 'ineligible' | 'coverage_needed' | 'pending' | 'ready' | 'unavailable' | 'stale';
+export type RemovalEstimate = {
+  status: RemovalEstimateStatus; areaSqFt?: number; lowUsd?: number; highUsd?: number;
+  method?: string; rationale?: string; assumptions?: string; scope?: string; exclusions?: string;
+  sources?: { title: string; url: string; publishedAt: string; pricingGeography?: string; quotedPrice: number; quotedUnit: 'sq_ft' | 'acre'; ratePerSqFt: number; includes: string[]; evidence: string }[];
+  generatedAt?: string;
+};
 export type Report = {
   id: string; speciesName: string; scientificName?: string; isFiscListed: boolean;
   listedCategory?: string; sourceUrl?: string | null; geminiSuggestion?: string;
@@ -17,6 +24,8 @@ export type Report = {
   photos?: ReportPhoto[]; activity?: ReportActivity[]; impactEvents?: ImpactEvent[];
   reporter?: { id: string | null; displayName: string };
   locationLabel?: string;
+  coverageAreaSqFt?: number; estimateStatus?: RemovalEstimateStatus; estimateReason?: string;
+  estimateCounty?: string | null; removalEstimate?: RemovalEstimate | null;
 };
 export function summarizeImpact(reports: Report[]) {
   const events = reports.flatMap((report) => report.impactEvents || []);
@@ -127,6 +136,18 @@ const message = JSON.parse(event.nativeEvent.data);
 
   return <View style={[styles.mapFrame, { height }]}><WebView source={{ html }} originWhitelist={['*']} onMessage={handleMessage} javaScriptEnabled domStorageEnabled /></View>;
 
+}
+
+type ScreenGuideItem = { label: string; detail: string; scope?: 'This view' | 'Shared data' | 'Moderator only' };
+export function ScreenGuide({ items }: { items: ScreenGuideItem[] }) {
+  return <View style={{ backgroundColor: '#EEF2E8', borderWidth: 1, borderColor: '#DDE5D8', borderRadius: 15, padding: 13, marginBottom: 14 }}>
+    <Text style={{ color: colors.green, fontSize: 9, fontWeight: '900', letterSpacing: 1.1 }}>QUICK GUIDE · THIS SCREEN</Text>
+    {items.map((item, index) => <View key={item.label} style={{ flexDirection: 'row', gap: 9, marginTop: 10, paddingTop: index ? 9 : 0, borderTopWidth: index ? StyleSheet.hairlineWidth : 0, borderTopColor: '#D6DED1' }}>
+      <View style={{ flex: 1 }}><Text style={{ color: colors.ink, fontSize: 11, fontWeight: '800' }}>{item.label}</Text><Text style={{ color: colors.muted, fontSize: 10, lineHeight: 15, marginTop: 2 }}>{item.detail}</Text></View>
+      {item.scope ? <Text style={{ color: item.scope === 'Moderator only' ? colors.amber : colors.green, fontSize: 8, fontWeight: '900', marginTop: 2 }}>{item.scope.toUpperCase()}</Text> : null}
+    </View>)}
+    <Text style={{ color: colors.muted, fontSize: 9, lineHeight: 13, marginTop: 10 }}>The bottom tabs switch views. “Shared data” also appears elsewhere; moderator tools are restricted to moderator accounts.</Text>
+  </View>;
 }
 
 

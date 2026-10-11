@@ -1,4 +1,4 @@
-# Spot the Spread — Post-MVP Feature Plan
+# InvAIsive Trace — Post-MVP Feature Plan
 
 ## Purpose and scope
 

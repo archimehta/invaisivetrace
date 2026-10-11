@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Location from 'expo-location';
@@ -11,6 +11,7 @@ type CommunityMetrics = {
   topLocations: { name: string; count: number }[];
   leaderboard: { rank: number; name: string; reportsSubmitted: number; confirmedReports: number; title: string }[];
 };
+type CommunityTrends = { interval: 'week' | 'month'; range: string; points: { period: string; submitted: number; confirmed: number }[] };
 export function useSightings() {
 
 
@@ -32,6 +33,10 @@ const [moderatorMetrics, setModeratorMetrics] = useState<{ metrics: { registered
 const [reviewReports, setReviewReports] = useState<Report[]>([]);
 const [reviewBusy, setReviewBusy] = useState(false);
 const [communityMetrics, setCommunityMetrics] = useState<CommunityMetrics | null>(null);
+const [communityTrends, setCommunityTrends] = useState<CommunityTrends | null>(null);
+const [trendsLoading, setTrendsLoading] = useState(false);
+const [trendsError, setTrendsError] = useState('');
+const trendsRequestId = useRef(0);
 const [locationLabel, setLocationLabel] = useState('');
 
 const [photo, setPhoto] = useState<ImagePicker.ImagePickerAsset | null>(null);
@@ -89,6 +94,30 @@ const refreshCommunityMetrics = async () => {
     } catch { setCommunityMetrics(null); }
   };
 
+const refreshCommunityTrends = async (interval: 'week' | 'month', range: '30d' | '90d' | '6m' | '1y' | 'all') => {
+    const requestId = ++trendsRequestId.current;
+    setTrendsLoading(true);
+    setTrendsError('');
+    try {
+      const query = new URLSearchParams({ interval, range });
+      const response = await fetch(`${API_URL}/api/metrics/trends?${query.toString()}`);
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error || `Trends API returned ${response.status}. Restart the backend so it loads the trends route.`);
+      }
+      const payload = await response.json();
+      if (requestId === trendsRequestId.current) setCommunityTrends(payload);
+    } catch (error) {
+      if (requestId === trendsRequestId.current) {
+        setCommunityTrends(null);
+        const message = error instanceof Error ? error.message : '';
+        setTrendsError(message && message !== 'Network request failed'
+          ? message
+          : `Can't reach ${API_URL}. Check that the backend is running and this device can reach your laptop.`);
+      }
+    } finally { if (requestId === trendsRequestId.current) setTrendsLoading(false); }
+  };
+
   useEffect(() => { void refreshReports(); void refreshCommunityMetrics(); }, []);
 const refreshReviewReports = async (token = authToken) => {
     if (!token) return;
@@ -97,6 +126,22 @@ const refreshReviewReports = async (token = authToken) => {
     if (!response.ok) throw new Error(payload.error || 'Could not load the review queue.');
     setReviewReports(payload.reports || []);
   };
+
+useEffect(() => {
+    const hasPendingPublic = reports.some((report) => report.removalEstimate?.status === 'pending');
+    const hasPendingReview = authUser?.role === 'moderator' && reviewReports.some((report) => report.estimateStatus === 'pending');
+    if (!hasPendingPublic && !hasPendingReview) return;
+    let refreshing = false;
+    const timer = setInterval(() => {
+      if (refreshing) return;
+      refreshing = true;
+      void Promise.all([
+        refreshReports(),
+        hasPendingReview ? refreshReviewReports(authToken) : Promise.resolve(),
+      ]).catch(() => {}).finally(() => { refreshing = false; });
+    }, 5_000);
+    return () => clearInterval(timer);
+}, [reports, reviewReports, authToken, authUser?.role]);
 
 const refreshAccountData = async (token = authToken, role = authUser?.role) => {
     if (!token) return;
@@ -440,14 +485,47 @@ const scientificName = selectedSpecies?.scientificName || (!manualMode || manual
 
   };
 
-const reviewReport = async (reportOrId: Report | string, status: string, reason?: string, speciesName?: string, scientificName?: string) => {
+const reviewReport = async (reportOrId: Report | string, status: string, reason?: string, speciesName?: string, scientificName?: string, coverageAreaSqFt?: number) => {
     if (!authToken) throw new Error('Sign in as moderator to review reports.');
     const reportId = typeof reportOrId === 'string' ? reportOrId : reportOrId.id;
-    const publicReason = reason?.trim() || (status === 'verified' ? 'Confirmed by the Spot the Spread community moderator.' : 'Flagged for additional review by the community moderator.');
-    const response = await fetch(`${API_URL}/api/reports/${encodeURIComponent(reportId)}/review`, { method: 'POST', headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ status, reason: publicReason, speciesName: speciesName?.trim() || undefined, scientificName: scientificName?.trim() || undefined }) });
+    const publicReason = reason?.trim() || (status === 'verified' ? 'Confirmed by the InvAIsive Trace community moderator.' : 'Flagged for additional review by the community moderator.');
+    const response = await fetch(`${API_URL}/api/reports/${encodeURIComponent(reportId)}/review`, { method: 'POST', headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ status, reason: publicReason, speciesName: speciesName?.trim() || undefined, scientificName: scientificName?.trim() || undefined, coverageAreaSqFt }) });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || 'Could not update report review.');
     await Promise.all([refreshReports(), refreshReviewReports(), refreshAccountData(authToken, authUser?.role), refreshCommunityMetrics()]);
+  };
+
+const removalEstimateAction = async (reportId: string, action: 'request' | 'retry' | 'reassess', coverageAreaSqFt?: number) => {
+    if (!authToken) throw new Error('Sign in as a moderator to manage removal estimates.');
+    const response = await fetch(`${API_URL}/api/reports/${encodeURIComponent(reportId)}/removal-estimate`, {
+      method: 'POST', headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, coverageAreaSqFt }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || 'Could not update the removal estimate.');
+    await Promise.all([refreshReports(), refreshReviewReports(), refreshCommunityMetrics()]);
+  };
+
+const stopAllRemovalEstimates = async () => {
+    if (!authToken) throw new Error('Sign in as a moderator to stop removal estimates.');
+    const response = await fetch(`${API_URL}/api/moderation/removal-estimates/stop-all`, {
+      method: 'POST', headers: { Authorization: `Bearer ${authToken}` },
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || 'Could not stop active removal estimates.');
+    await Promise.all([refreshReports(), refreshReviewReports(), refreshCommunityMetrics()]);
+    return payload as { cancelledJobs: number; cancelledReports: number };
+  };
+
+const correctReportLocation = async (reportId: string, point: Coordinate) => {
+    if (!authToken) throw new Error('Sign in as a moderator to correct report locations.');
+    const response = await fetch(`${API_URL}/api/reports/${encodeURIComponent(reportId)}/location`, {
+      method: 'PATCH', headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(point),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || 'Could not correct the report location.');
+    await Promise.all([refreshReports(), refreshReviewReports()]);
   };
 
 const addImpactEvent = async (reportId: string, type: string, date: string, noteText: string, eventPhoto?: ImagePicker.ImagePickerAsset) => {
@@ -487,6 +565,6 @@ const reportCountLabel = `${reports.length} ${reports.length === 1 ? 'sighting' 
 
 
 
-return {tab,setTab,reports,apiOnline,photo,setPhoto,supportingPhotos,setSupportingPhotos,guess,setGuess,guessMessage,isIdentifying,selectedSpecies,setSelectedSpecies,manualName,setManualName,manualMode,setManualMode,search,setSearch,note,setNote,exactLocationPublic,setExactLocationPublic,location,setLocation:setSightingLocation,locationLabel,locationMessage,setLocationMessage,isSubmitting,refreshReports,refreshCommunityMetrics,communityMetrics,filteredSpecies,choosePhoto,identifyPhoto,setCurrentLocation,submitReport,activeCenter,reportCountLabel,authToken,authUser,authMode,setAuthMode,authName,setAuthName,authEmail,setAuthEmail,authPassword,setAuthPassword,authBusy,authenticate,signOut,userMetrics,moderatorMetrics,refreshAccountData,reviewReports,moderationQueue:reviewReports,reviewBusy,setReviewBusy,refreshReviewReports,setLeaderboardVisibility,reviewReport,addImpactEvent,deleteReport,pickEventPhoto};
+return {tab,setTab,reports,apiOnline,photo,setPhoto,supportingPhotos,setSupportingPhotos,guess,setGuess,guessMessage,isIdentifying,selectedSpecies,setSelectedSpecies,manualName,setManualName,manualMode,setManualMode,search,setSearch,note,setNote,exactLocationPublic,setExactLocationPublic,location,setLocation:setSightingLocation,locationLabel,locationMessage,setLocationMessage,isSubmitting,refreshReports,refreshCommunityMetrics,communityMetrics,communityTrends,trendsLoading,trendsError,refreshCommunityTrends,filteredSpecies,choosePhoto,identifyPhoto,setCurrentLocation,submitReport,activeCenter,reportCountLabel,authToken,authUser,authMode,setAuthMode,authName,setAuthName,authEmail,setAuthEmail,authPassword,setAuthPassword,authBusy,authenticate,signOut,userMetrics,moderatorMetrics,refreshAccountData,reviewReports,moderationQueue:reviewReports,reviewBusy,setReviewBusy,refreshReviewReports,setLeaderboardVisibility,reviewReport,removalEstimateAction,stopAllRemovalEstimates,correctReportLocation,addImpactEvent,deleteReport,pickEventPhoto};
 }
 export type SightingsVM = ReturnType<typeof useSightings>;
