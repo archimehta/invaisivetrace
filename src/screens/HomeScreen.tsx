@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { BrandWordmark } from '../components/BrandWordmark';
-import { ActionButton, colors, styles, summarizeImpact } from '../components/shared';
+import { ActionButton, colors, ScreenGuide, styles, summarizeImpact } from '../components/shared';
 import { SightingsVM } from '../hooks/useSightings';
 
 export function HomeScreen({vm}:{vm:SightingsVM}) {
@@ -16,6 +16,12 @@ export function HomeScreen({vm}:{vm:SightingsVM}) {
    <Text style={{fontSize:14,lineHeight:21,color:'#D4E2D5',marginTop:12}}>Our mission is to help neighbors notice and document invasive plants early, so local communities can better protect Florida’s natural places.</Text>
    <View style={{marginTop:20}}><ActionButton title="Report a plant  →" onPress={()=>setTab('report')}/></View>
   </View>
+
+  <ScreenGuide items={[
+   {label:'Mission banner',detail:'Explains the local conservation goal and links straight to the report form.',scope:'This view'},
+   {label:'Community counts',detail:'Show all shared sightings and how many moderators have confirmed.',scope:'Shared data'},
+   {label:'Explore shortcuts',detail:'Open the map or the searchable report list without using the bottom tabs.',scope:'This view'},
+  ]}/>
 
   <View style={{marginTop:22,flexDirection:'row',gap:10}}>
    <View style={{flex:1,backgroundColor:'#E8EEE5',borderRadius:17,padding:14}}><Text style={{fontSize:24,color:colors.green,fontWeight:'800'}}>{reports.length}</Text><Text style={{fontSize:11,color:colors.muted,marginTop:4}}>community sightings</Text></View>

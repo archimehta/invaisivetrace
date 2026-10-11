@@ -1,6 +1,6 @@
 import React from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { ActionButton, colors, contributorTitle, styles } from '../components/shared';
+import { ActionButton, colors, contributorTitle, ScreenGuide, styles } from '../components/shared';
 import { SightingsVM } from '../hooks/useSightings';
 
 export function AccountScreen({ vm }: { vm: SightingsVM }) {
@@ -10,6 +10,15 @@ export function AccountScreen({ vm }: { vm: SightingsVM }) {
     <Text style={styles.eyebrow}>YOUR FIELDWORK</Text>
     <Text style={styles.headingSmall}>{authUser ? 'Your account' : 'Join the community'}</Text>
     <Text style={styles.bodyCopy}>Keep your sightings together and see how your observations support local stewardship.</Text>
+    <ScreenGuide items={authUser ? [
+      {label:'Contribution counts',detail:'Your uploads, confirmed reports and reports awaiting review belong to your account.',scope:'This view'},
+      {label:'Field title',detail:'Earned only from moderator-confirmed reports, not total uploads.',scope:'Shared data'},
+      ...(authUser.role === 'user' ? [{label:'Leaderboard privacy',detail:'Choose whether the public leaderboard shows your display name or “Anonymous contributor.”',scope:'Shared data' as const}] : []),
+      ...(authUser.role === 'moderator' ? [{label:'Participation dashboard',detail:'Account emails and per-member totals are visible here to moderators only; open Review for report decisions.',scope:'Moderator only' as const}] : []),
+    ] : [
+      {label:'Sign in',detail:'Access contribution totals for an existing community account.',scope:'This view'},
+      {label:'Create account',detail:'Create a project profile to submit sightings and track your contributions. Your email is not shown on public reports.',scope:'This view'},
+    ]} />
 
     {!authUser ? <View style={{ backgroundColor: colors.white, borderRadius: 20, borderWidth: 1, borderColor: colors.border, padding: 16 }}>
       <View style={styles.modeToggle}>

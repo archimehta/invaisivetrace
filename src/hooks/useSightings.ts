@@ -127,6 +127,22 @@ const refreshReviewReports = async (token = authToken) => {
     setReviewReports(payload.reports || []);
   };
 
+useEffect(() => {
+    const hasPendingPublic = reports.some((report) => report.removalEstimate?.status === 'pending');
+    const hasPendingReview = authUser?.role === 'moderator' && reviewReports.some((report) => report.estimateStatus === 'pending');
+    if (!hasPendingPublic && !hasPendingReview) return;
+    let refreshing = false;
+    const timer = setInterval(() => {
+      if (refreshing) return;
+      refreshing = true;
+      void Promise.all([
+        refreshReports(),
+        hasPendingReview ? refreshReviewReports(authToken) : Promise.resolve(),
+      ]).catch(() => {}).finally(() => { refreshing = false; });
+    }, 5_000);
+    return () => clearInterval(timer);
+}, [reports, reviewReports, authToken, authUser?.role]);
+
 const refreshAccountData = async (token = authToken, role = authUser?.role) => {
     if (!token) return;
     const headers = { Authorization: `Bearer ${token}` };
@@ -490,6 +506,17 @@ const removalEstimateAction = async (reportId: string, action: 'request' | 'retr
     await Promise.all([refreshReports(), refreshReviewReports(), refreshCommunityMetrics()]);
   };
 
+const stopAllRemovalEstimates = async () => {
+    if (!authToken) throw new Error('Sign in as a moderator to stop removal estimates.');
+    const response = await fetch(`${API_URL}/api/moderation/removal-estimates/stop-all`, {
+      method: 'POST', headers: { Authorization: `Bearer ${authToken}` },
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || 'Could not stop active removal estimates.');
+    await Promise.all([refreshReports(), refreshReviewReports(), refreshCommunityMetrics()]);
+    return payload as { cancelledJobs: number; cancelledReports: number };
+  };
+
 const correctReportLocation = async (reportId: string, point: Coordinate) => {
     if (!authToken) throw new Error('Sign in as a moderator to correct report locations.');
     const response = await fetch(`${API_URL}/api/reports/${encodeURIComponent(reportId)}/location`, {
@@ -538,6 +565,6 @@ const reportCountLabel = `${reports.length} ${reports.length === 1 ? 'sighting' 
 
 
 
-return {tab,setTab,reports,apiOnline,photo,setPhoto,supportingPhotos,setSupportingPhotos,guess,setGuess,guessMessage,isIdentifying,selectedSpecies,setSelectedSpecies,manualName,setManualName,manualMode,setManualMode,search,setSearch,note,setNote,exactLocationPublic,setExactLocationPublic,location,setLocation:setSightingLocation,locationLabel,locationMessage,setLocationMessage,isSubmitting,refreshReports,refreshCommunityMetrics,communityMetrics,communityTrends,trendsLoading,trendsError,refreshCommunityTrends,filteredSpecies,choosePhoto,identifyPhoto,setCurrentLocation,submitReport,activeCenter,reportCountLabel,authToken,authUser,authMode,setAuthMode,authName,setAuthName,authEmail,setAuthEmail,authPassword,setAuthPassword,authBusy,authenticate,signOut,userMetrics,moderatorMetrics,refreshAccountData,reviewReports,moderationQueue:reviewReports,reviewBusy,setReviewBusy,refreshReviewReports,setLeaderboardVisibility,reviewReport,removalEstimateAction,correctReportLocation,addImpactEvent,deleteReport,pickEventPhoto};
+return {tab,setTab,reports,apiOnline,photo,setPhoto,supportingPhotos,setSupportingPhotos,guess,setGuess,guessMessage,isIdentifying,selectedSpecies,setSelectedSpecies,manualName,setManualName,manualMode,setManualMode,search,setSearch,note,setNote,exactLocationPublic,setExactLocationPublic,location,setLocation:setSightingLocation,locationLabel,locationMessage,setLocationMessage,isSubmitting,refreshReports,refreshCommunityMetrics,communityMetrics,communityTrends,trendsLoading,trendsError,refreshCommunityTrends,filteredSpecies,choosePhoto,identifyPhoto,setCurrentLocation,submitReport,activeCenter,reportCountLabel,authToken,authUser,authMode,setAuthMode,authName,setAuthName,authEmail,setAuthEmail,authPassword,setAuthPassword,authBusy,authenticate,signOut,userMetrics,moderatorMetrics,refreshAccountData,reviewReports,moderationQueue:reviewReports,reviewBusy,setReviewBusy,refreshReviewReports,setLeaderboardVisibility,reviewReport,removalEstimateAction,stopAllRemovalEstimates,correctReportLocation,addImpactEvent,deleteReport,pickEventPhoto};
 }
 export type SightingsVM = ReturnType<typeof useSightings>;

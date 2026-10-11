@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Linking, Pressable, ScrollView, Text, View } from 'react-native';
-import { ActionButton, colors, contributorTitle, styles } from '../components/shared';
+import { ActionButton, colors, contributorTitle, ScreenGuide, styles } from '../components/shared';
 import { SightingsVM } from '../hooks/useSightings';
 
 export function MetricsScreen({ vm }: { vm: SightingsVM }) {
@@ -32,6 +32,13 @@ export function MetricsScreen({ vm }: { vm: SightingsVM }) {
     <Text style={styles.eyebrow}>THE COMMUNITY FIELD REPORT</Text>
     <Text style={styles.headingSmall}>Our impact, in the field</Text>
     <Text style={styles.bodyCopy}>Patterns from local sightings help neighbors and land stewards see what’s spreading. Only moderator-confirmed reports shape species and location trends.</Text>
+    <ScreenGuide items={[
+      {label:'Community totals',detail:'Count submitted, moderator-confirmed and awaiting-review reports across the project.',scope:'Shared data'},
+      {label:'Trend chart',detail:'Compare submissions with confirmations. Choose weekly or monthly buckets and a date range above the chart.',scope:'This view'},
+      {label:'Species and areas',detail:'Rank confirmed sightings by plant and broad location; precise pins are not shown here.',scope:'Shared data'},
+      {label:'Leaderboard and titles',detail:'Uploads determine leaderboard order; confirmed reports determine contributor titles. Names follow each member’s visibility setting.',scope:'Shared data'},
+      ...(authUser?.role === 'moderator' ? [{label:'Review tools',detail:'Moderator-only cards let you check pending reports and confirm or flag them.',scope:'Moderator only' as const}] : []),
+    ]} />
 
     <View style={{ backgroundColor: colors.green, borderRadius: 22, padding: 17 }}>
       <Text style={{ color: '#D9E7D5', fontSize: 10, fontWeight: '800', letterSpacing: 1.3 }}>ORANGE COUNTY COMMUNITY</Text>

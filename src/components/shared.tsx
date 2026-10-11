@@ -138,6 +138,18 @@ const message = JSON.parse(event.nativeEvent.data);
 
 }
 
+type ScreenGuideItem = { label: string; detail: string; scope?: 'This view' | 'Shared data' | 'Moderator only' };
+export function ScreenGuide({ items }: { items: ScreenGuideItem[] }) {
+  return <View style={{ backgroundColor: '#EEF2E8', borderWidth: 1, borderColor: '#DDE5D8', borderRadius: 15, padding: 13, marginBottom: 14 }}>
+    <Text style={{ color: colors.green, fontSize: 9, fontWeight: '900', letterSpacing: 1.1 }}>QUICK GUIDE · THIS SCREEN</Text>
+    {items.map((item, index) => <View key={item.label} style={{ flexDirection: 'row', gap: 9, marginTop: 10, paddingTop: index ? 9 : 0, borderTopWidth: index ? StyleSheet.hairlineWidth : 0, borderTopColor: '#D6DED1' }}>
+      <View style={{ flex: 1 }}><Text style={{ color: colors.ink, fontSize: 11, fontWeight: '800' }}>{item.label}</Text><Text style={{ color: colors.muted, fontSize: 10, lineHeight: 15, marginTop: 2 }}>{item.detail}</Text></View>
+      {item.scope ? <Text style={{ color: item.scope === 'Moderator only' ? colors.amber : colors.green, fontSize: 8, fontWeight: '900', marginTop: 2 }}>{item.scope.toUpperCase()}</Text> : null}
+    </View>)}
+    <Text style={{ color: colors.muted, fontSize: 9, lineHeight: 13, marginTop: 10 }}>The bottom tabs switch views. “Shared data” also appears elsewhere; moderator tools are restricted to moderator accounts.</Text>
+  </View>;
+}
+
 
 
 export function ActionButton({ title, onPress, secondary = false, disabled = false, small = false }: { title: string; onPress: () => void; secondary?: boolean; disabled?: boolean; small?: boolean }) {

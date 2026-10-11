@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ActivityIndicator, Alert, Image, Linking, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { ActionButton, MapPanel, colors, styles, findInCatalog } from '../components/shared';
+import { ActionButton, MapPanel, colors, ScreenGuide, styles, findInCatalog } from '../components/shared';
 import { SightingsVM } from '../hooks/useSightings';
 
 export function ReportScreen({vm}:{vm:SightingsVM}) {
@@ -22,6 +22,22 @@ export function ReportScreen({vm}:{vm:SightingsVM}) {
    <View style={{flexDirection:'row',marginTop:18,gap:7}}>{[1,2,3,4].map(n=><Pressable key={n} onPress={()=>{if(n<step)setStep(n as 1|2|3|4)}} style={{flex:1,gap:6}}><View style={{height:5,borderRadius:6,backgroundColor:n<=step?colors.green:colors.border}}/><Text style={{color:n===step?colors.green:colors.muted,fontSize:10,fontWeight:n===step?'800':'500'}}>{['Photo','Identify','Location','Review'][n-1]}</Text></Pressable>)}</View>
  </View>
  <ScrollView key={step} contentContainerStyle={[styles.content,{paddingBottom:35}]} keyboardShouldPersistTaps="handled">
+ <ScreenGuide items={[
+   {label:'Progress steps',detail:'Photo → identify → location → review. The bar shows where you are; completed steps can be tapped to go back.',scope:'This view'},
+   ...(step === 1 ? [
+     {label:'Main photo',detail:'This is the primary evidence attached to the report and the image used for an optional AI suggestion.',scope:'This view' as const},
+     {label:'Camera and library buttons',detail:'Choose a new photo or an existing image. A person must still confirm the plant name.',scope:'This view' as const},
+   ] : step === 2 ? [
+     {label:'AI suggestion',detail:'Gemini offers a tentative visual guess. It is not a verified identification; choose or correct the name yourself.',scope:'This view' as const},
+     {label:'FISC catalog',detail:'Searches Florida’s reference list. “Possible unlisted” lets you report a plant that is not in the catalog.',scope:'Shared data' as const},
+   ] : step === 3 ? [
+     {label:'Location pin',detail:'Use GPS or tap the map to set the observation location. Drag the pin to adjust it.',scope:'This view' as const},
+     {label:'Exact-location option',detail:'Controls whether the public map uses exact or approximate coordinates. Moderators can see the precise pin.',scope:'This view' as const},
+   ] : [
+     {label:'Field note',detail:'Add context such as plant size or nearby habitat. It is shared with the report.',scope:'This view' as const},
+     {label:'Submit sighting',detail:'Saves the report for the community and moderator queue. It starts as unverified.',scope:'Shared data' as const},
+   ]),
+ ]} />
 {step===1&&<>
     <Text style={styles.eyebrow}>STEP 01 · PHOTO</Text><Text style={styles.headingSmall}>Capture the plant</Text><Text style={styles.bodyCopy}>Get close enough to show its leaves, flowers, or fruit.</Text>
 

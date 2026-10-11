@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, AppState, Image, Linking, Modal, Pressable, SafeAreaView, ScrollView, Text, TextInput, View } from 'react-native';
-import { ActionButton, colors, Report, styles } from '../components/shared';
+import { ActionButton, colors, Report, ScreenGuide, styles } from '../components/shared';
 import { SightingsVM } from '../hooks/useSightings';
 
 const statusLabel = (status: string) => status.replace('_', ' ');
@@ -44,6 +44,12 @@ export function SightingsScreen({ vm }: { vm: SightingsVM }) {
       <Text style={styles.eyebrow}>ORANGE COUNTY · COMMUNITY</Text>
       <Text style={styles.headingSmall}>Sightings</Text>
       <Text style={styles.bodyCopy}>Open a report to see its photos, source, review activity and recorded fieldwork.</Text>
+      <ScreenGuide items={[
+        {label:'Search',detail:'Matches plant names, scientific names and reporter notes in the loaded reports.',scope:'This view'},
+        {label:'Status filters',detail:'Narrow the list by moderator review state. Filtering never changes a report.',scope:'This view'},
+        {label:'Report cards',detail:'Show a short summary. Tap a card to open the full detail sheet with photos, location privacy, activity and fieldwork.',scope:'Shared data'},
+        {label:'Estimate details',detail:'When available, the detail sheet shows the AI ballpark; it is not a contractor quote.',scope:'Shared data'},
+      ]} />
       <View style={{ backgroundColor: colors.white, borderRadius: 15, paddingHorizontal: 14, marginBottom: 11, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center' }}><Text style={{ fontSize: 17, marginRight: 8 }}>⌕</Text><TextInput placeholder="Search plants or notes" value={query} onChangeText={setQuery} placeholderTextColor="#8A988E" style={{ height: 46, color: colors.ink, flex: 1 }} /></View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginBottom: 16 }}>{(['all', 'unverified', 'needs_review', 'verified'] as const).map((value) => <Pressable key={value} onPress={() => setFilter(value)} style={{ paddingVertical: 9, paddingHorizontal: 13, borderRadius: 18, backgroundColor: filter === value ? colors.green : '#E8EDE4' }}><Text style={{ color: filter === value ? colors.white : colors.ink, fontSize: 11, fontWeight: '700' }}>{value === 'all' ? 'All reports' : value === 'unverified' ? 'Unverified' : value === 'needs_review' ? 'Needs review' : 'Verified'}</Text></Pressable>)}</ScrollView>
       <View style={[styles.sectionHead, { marginBottom: 12 }]}><View><Text style={styles.sectionTitle}>Recent reports</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>Reports stay unverified until reviewed.</Text></View><Text style={styles.sectionMeta}>{visible.length} found</Text></View>
@@ -109,21 +115,16 @@ function RemovalCostDetails({ estimate, onRefresh }: { estimate: NonNullable<Rep
     </Pressable>
     {expanded ? <View style={{ paddingHorizontal: 13, paddingBottom: 13, borderTopWidth: 1, borderTopColor: colors.border }}>
       {estimate.status === 'ready' ? <>
-        <Text style={styles.helperText}>Informational estimate for Florida. Actual contractor quotes vary.</Text>
+        <Text style={styles.helperText}>AI-generated ballpark from general model knowledge, not current vendor pricing. Get local quotes before making decisions.</Text>
         <Text style={{ color: colors.ink, fontSize: 12, lineHeight: 18, marginTop: 9 }}>Range: {money(estimate.lowUsd || 0)}–{money(estimate.highUsd || 0)} USD · {Number(estimate.areaSqFt || 0).toLocaleString()} sq ft</Text>
         {estimate.method ? <Text style={styles.helperText}>Method: {estimate.method}</Text> : null}
-        {estimate.scope ? <Text style={styles.helperText}>Includes: {estimate.scope}</Text> : null}
+        {estimate.scope ? <Text style={styles.helperText}>Scope: {estimate.scope}</Text> : null}
         {estimate.exclusions ? <Text style={styles.helperText}>Excludes: {estimate.exclusions}</Text> : null}
         {estimate.rationale ? <Text style={styles.helperText}>Rationale: {estimate.rationale}</Text> : null}
         {estimate.assumptions ? <Text style={styles.helperText}>Assumptions: {estimate.assumptions}</Text> : null}
         <Text style={{ color: colors.muted, fontSize: 10, marginTop: 9 }}>Generated {estimate.generatedAt ? new Date(estimate.generatedAt).toLocaleDateString() : 'date unavailable'}</Text>
-        {(estimate.sources || []).map((source, index) => <View key={`${source.url}-${index}`} style={{ marginTop: 9, paddingTop: 8, borderTopWidth: 1, borderTopColor: colors.border }}>
-          <Text accessibilityRole="link" onPress={() => void Linking.openURL(source.url).catch(() => Alert.alert('Could not open source', 'Check your internet connection.'))} style={{ color: colors.green, fontSize: 11, fontWeight: '800', textDecorationLine: 'underline' }}>{source.title || 'Pricing source'} ↗</Text>
-          <Text style={{ color: colors.muted, fontSize: 10, marginTop: 3 }}>Published {new Date(source.publishedAt).toLocaleDateString()} · {money(source.quotedPrice)} per {source.quotedUnit === 'acre' ? 'acre' : 'sq ft'}{source.pricingGeography ? ` · ${source.pricingGeography}` : ''}</Text>
-          {source.evidence ? <Text style={{ color: colors.ink, fontSize: 10, lineHeight: 15, marginTop: 3 }}>{source.evidence}</Text> : null}
-        </View>)}
       </> : <>
-        <Text style={styles.helperText}>{estimate.status === 'pending' ? 'A moderator-requested estimate is being prepared from recent Florida pricing sources.' : estimate.status === 'stale' ? 'A treatment was recorded. A moderator must confirm the remaining infested area before a new estimate can be published.' : 'A supported estimate is not currently available. This does not affect the report or its verified status.'}</Text>
+        <Text style={styles.helperText}>{estimate.status === 'pending' ? 'A moderator-requested rough AI ballpark is being prepared. It will not use live pricing research.' : estimate.status === 'stale' ? 'A treatment was recorded. A moderator must confirm the remaining infested area before a new estimate can be published.' : 'An AI ballpark is not currently available. This does not affect the report or its verified status.'}</Text>
         {estimate.status === 'pending' ? <Pressable accessibilityRole="button" onPress={onRefresh} style={{ alignSelf: 'flex-start', paddingVertical: 10 }}><Text style={{ color: colors.green, fontSize: 11, fontWeight: '900' }}>Refresh estimate status ↻</Text></Pressable> : null}
       </>}
     </View> : null}
