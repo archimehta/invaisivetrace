@@ -1,22 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Linking, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { ActionButton, colors, contributorTitle, ScreenGuide, styles } from '../components/shared';
 import { SightingsVM } from '../hooks/useSightings';
 
 export function MetricsScreen({ vm }: { vm: SightingsVM }) {
-  const { communityMetrics, refreshCommunityMetrics, refreshAccountData, communityTrends, trendsLoading, trendsError, refreshCommunityTrends, authToken, authUser, userMetrics, setTab, moderationQueue, reviewReport } = vm;
+  const { communityMetrics, refreshCommunityMetrics, refreshAccountData, communityTrends, trendsLoading, trendsError, refreshCommunityTrends, authToken, authUser, userMetrics, setTab } = vm;
   const [trendInterval, setTrendInterval] = useState<'week' | 'month'>('week');
   const [trendRange, setTrendRange] = useState<'30d' | '90d' | '6m' | '1y' | 'all'>('90d');
   const data = communityMetrics;
   const title = contributorTitle(userMetrics?.verifiedReports || 0);
   const speciesMax = Math.max(1, ...(data?.topSpecies.map((item) => item.count) || []));
   const locationMax = Math.max(1, ...(data?.topLocations.map((item) => item.count) || []));
-  const pendingReports = moderationQueue.filter((report) => ['unverified', 'needs_review'].includes(report.reviewStatus));
-  const formatDate = (value?: string) => {
-    if (!value) return 'Not provided';
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
-  };
   useEffect(() => { void refreshCommunityTrends(trendInterval, trendRange); }, [trendInterval, trendRange]);
   const trendPoints = communityTrends?.interval === trendInterval && communityTrends.range === trendRange ? communityTrends.points : [];
   const maxTrendCount = Math.max(1, ...trendPoints.flatMap((point) => [point.submitted, point.confirmed]));
@@ -37,7 +31,6 @@ export function MetricsScreen({ vm }: { vm: SightingsVM }) {
       {label:'Trend chart',detail:'Compare submissions with confirmations. Choose weekly or monthly buckets and a date range above the chart.',scope:'This view'},
       {label:'Species and areas',detail:'Rank confirmed sightings by plant and broad location; precise pins are not shown here.',scope:'Shared data'},
       {label:'Leaderboard and titles',detail:'Uploads determine leaderboard order; confirmed reports determine contributor titles. Names follow each member’s visibility setting.',scope:'Shared data'},
-      ...(authUser?.role === 'moderator' ? [{label:'Review tools',detail:'Moderator-only cards let you check pending reports and confirm or flag them.',scope:'Moderator only' as const}] : []),
     ]} />
 
     <View style={{ backgroundColor: colors.green, borderRadius: 22, padding: 17 }}>
@@ -75,34 +68,6 @@ export function MetricsScreen({ vm }: { vm: SightingsVM }) {
         </View>)}
       </ScrollView> : trendsLoading ? <View style={{ minHeight: 150, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator color={colors.green} /></View> : <View style={{ minHeight: 125, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: colors.muted, fontSize: 11, textAlign: 'center' }}>No reports in this date range yet. Try a wider range or check back after new sightings are submitted.</Text></View>}
     </View>
-
-    {authUser?.role === 'moderator' ? <View style={{ marginTop: 16 }}>
-      <Text style={styles.eyebrow}>MODERATOR TOOLS</Text>
-      <Text style={styles.sectionTitle}>Reports awaiting review</Text>
-      <Text style={styles.helperText}>Confirm valid sightings to include them in community trends and contributor titles.</Text>
-      {pendingReports.length ? pendingReports.map((report) => <View key={report.id} style={{ backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: 17, padding: 14, marginTop: 10 }}>
-        {(report.photos || []).length ? <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -14, marginTop: -14, marginBottom: 12 }} contentContainerStyle={{ paddingHorizontal: 14, gap: 8 }}>{(report.photos || []).map((photo) => <Image key={photo.id} source={{ uri: photo.url }} accessibilityLabel="Sighting report photo" style={{ width: 230, height: 170, borderRadius: 14, backgroundColor: colors.pale }} />)}</ScrollView> : <View style={{ backgroundColor: colors.pale, borderRadius: 13, padding: 14, marginBottom: 12 }}><Text style={{ color: colors.muted, fontSize: 11 }}>No photo attached to this report.</Text></View>}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8, alignItems: 'center' }}><Text style={{ color: colors.ink, fontSize: 14, fontWeight: '800', flex: 1 }}>{report.speciesName}</Text><Text style={{ color: colors.amber, backgroundColor: colors.amberPale, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 5, fontSize: 9, fontWeight: '800' }}>{report.reviewStatus.replace('_', ' ').toUpperCase()}</Text></View>
-        {report.scientificName ? <Text style={{ color: colors.muted, fontSize: 11, fontStyle: 'italic', marginTop: 3 }}>{report.scientificName}</Text> : null}
-        <View style={{ backgroundColor: colors.paper, borderRadius: 12, padding: 11, marginTop: 11 }}>
-          <Text style={{ color: colors.ink, fontSize: 11, lineHeight: 18 }}>Reporter: {report.reporter?.displayName || 'Community member'}</Text>
-          <Text style={{ color: colors.ink, fontSize: 11, lineHeight: 18 }}>Observed: {formatDate(report.observedAt)}</Text>
-          <Text style={{ color: colors.ink, fontSize: 11, lineHeight: 18 }}>Submitted: {formatDate(report.created)}</Text>
-          <Text style={{ color: colors.ink, fontSize: 11, lineHeight: 18 }}>Area: {report.locationLabel || 'Orange County, FL'}</Text>
-          <Text style={{ color: colors.ink, fontSize: 11, lineHeight: 18 }}>Coordinates: {typeof report.latitude === 'number' && typeof report.longitude === 'number' ? `${report.latitude.toFixed(6)}, ${report.longitude.toFixed(6)}` : 'Unavailable'}{report.exactLocationPublic ? ' · exact location public' : ' · public map location is approximate'}</Text>
-          <Text style={{ color: colors.ink, fontSize: 11, lineHeight: 18 }}>FISC catalog: {report.isFiscListed ? `Listed${report.listedCategory ? ` · ${report.listedCategory}` : ''}` : 'Not listed / possible unlisted invasive'}</Text>
-          {report.sourceUrl ? <Text accessibilityRole="link" onPress={() => { void Linking.openURL(report.sourceUrl!).catch(() => {}); }} style={{ color: colors.green, fontSize: 11, lineHeight: 18, textDecorationLine: 'underline' }}>Open FISC source</Text> : null}
-          <Text style={{ color: colors.ink, fontSize: 11, lineHeight: 18 }}>Report ID: {report.id}</Text>
-        </View>
-        {report.geminiSuggestion ? <View style={{ marginTop: 10 }}><Text style={{ color: colors.muted, fontSize: 9, fontWeight: '800', letterSpacing: .7 }}>AI SUGGESTION · UNVERIFIED</Text><Text style={{ color: colors.ink, fontSize: 11, lineHeight: 16, marginTop: 4 }}>{report.geminiSuggestion}</Text></View> : null}
-        <View style={{ marginTop: 10 }}><Text style={{ color: colors.muted, fontSize: 9, fontWeight: '800', letterSpacing: .7 }}>REPORTER NOTES</Text><Text style={{ color: colors.ink, fontSize: 11, lineHeight: 16, marginTop: 4 }}>{report.note?.trim() || 'No notes provided.'}</Text></View>
-        {(report.activity || []).length ? <View style={{ marginTop: 10 }}><Text style={{ color: colors.muted, fontSize: 9, fontWeight: '800', letterSpacing: .7 }}>REVIEW HISTORY</Text>{report.activity!.map((event) => <Text key={event.id} style={{ color: colors.ink, fontSize: 10, lineHeight: 15, marginTop: 4 }}>{formatDate(event.occurredAt)} · {event.type.replaceAll('_', ' ')}{event.publicReason ? ` — ${event.publicReason}` : ''}</Text>)}</View> : null}
-        <View style={{ flexDirection: 'row', gap: 8, marginTop: 11 }}>
-          <View style={{ flex: 1 }}><ActionButton title="Confirm sighting" onPress={() => { void reviewReport(report.id, 'verified'); }} /></View>
-          <View style={{ flex: 1 }}><ActionButton title="Needs review" onPress={() => { void reviewReport(report.id, 'needs_review'); }} secondary /></View>
-        </View>
-      </View>) : <View style={styles.emptyCard}><Text style={styles.helperText}>No reports are waiting for review.</Text></View>}
-    </View> : null}
 
     {!data ? <View style={styles.emptyCard}><ActivityIndicator color={colors.green} /><Text style={[styles.helperText, { textAlign: 'center' }]}>Connect to the API to load community metrics.</Text></View> : <>
       <View style={{ marginTop: 14 }}>

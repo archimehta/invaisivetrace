@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Alert, Image, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { ActionButton, colors, Coordinate, MapPanel, Report, ScreenGuide, styles } from '../components/shared';
+import { ActionButton, colors, MapPanel, Report, ScreenGuide, styles } from '../components/shared';
 import { SightingsVM } from '../hooks/useSightings';
 
 const transitions: Record<string, string[]> = { unverified: ['needs_review', 'verified', 'rejected'], needs_review: ['verified', 'rejected', 'unverified'], verified: ['needs_review', 'rejected'], rejected: ['needs_review'] };
@@ -37,7 +37,7 @@ const estimateStatusDescription = (report: Report) => {
 };
 
 export function ReviewScreen({ vm }: { vm: SightingsVM }) {
-  const { authUser, reviewReports, refreshReviewReports, authToken, reviewReport, removalEstimateAction, stopAllRemovalEstimates, correctReportLocation, addImpactEvent, deleteReport, pickEventPhoto, reviewBusy, setReviewBusy, setTab } = vm;
+  const { authUser, reviewReports, refreshReviewReports, authToken, reviewReport, checkReportIdentification, removalEstimateAction, stopAllRemovalEstimates, addImpactEvent, deleteReport, pickEventPhoto, reviewBusy, setReviewBusy, setTab } = vm;
   const [filter, setFilter] = useState<'all' | 'unverified' | 'needs_review' | 'verified' | 'rejected'>('all');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -47,7 +47,7 @@ export function ReviewScreen({ vm }: { vm: SightingsVM }) {
     <Text style={styles.eyebrow}>MODERATOR WORKSPACE</Text><Text style={styles.headingSmall}>Review reports</Text><Text style={styles.bodyCopy}>Review the identification and evidence, then choose a status and record a public reason. Your personal identity is not shown in public activity.</Text>
     <ScreenGuide items={[
       {label:'Status filters',detail:'Show all reports or narrow the queue by their current review state.',scope:'This view'},
-      {label:'Report cards',detail:'Review photos, location, notes, catalog source and history. Save corrections and a public reason with each decision.',scope:'Moderator only'},
+      {label:'Report cards',detail:'Review photos, a map preview, notes, catalog source and history, then update the review status.',scope:'Moderator only'},
       {label:'Plant removal estimates',detail:'For verified, listed plants, enter coverage to request an AI cost ballpark. It is not a contractor quote.',scope:'Moderator only'},
       {label:'Fieldwork events',detail:'Record inspections, treatments and follow-ups as separate events; these do not mark a site as cleared.',scope:'Moderator only'},
       {label:'Stop all active estimates',detail:'Cancels queued/running estimates across reports and clears pending values; completed reports stay unchanged.',scope:'Moderator only'},
@@ -57,31 +57,35 @@ export function ReviewScreen({ vm }: { vm: SightingsVM }) {
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 7, marginTop: 14, marginBottom: 12 }}>{(['all', 'unverified', 'needs_review', 'verified', 'rejected'] as const).map((status) => <Pressable key={status} onPress={() => setFilter(status)} style={{ paddingVertical: 8, paddingHorizontal: 11, borderRadius: 16, backgroundColor: filter === status ? colors.green : '#E8EDE4' }}><Text style={{ color: filter === status ? colors.white : colors.ink, fontSize: 10, fontWeight: '800' }}>{status === 'all' ? 'All' : pretty(status)}</Text></Pressable>)}</View>
     {error ? <Text style={{ color: colors.red, fontSize: 12, marginBottom: 10 }}>{error}</Text> : null}
     {notice ? <Text style={{ color: colors.green, fontSize: 12, marginBottom: 10 }}>{notice}</Text> : null}
-    {visible.length ? visible.map((report) => <ReviewReport key={report.id} report={report} busy={reviewBusy} setBusy={setReviewBusy} reviewReport={reviewReport} removalEstimateAction={removalEstimateAction} correctReportLocation={correctReportLocation} addImpactEvent={addImpactEvent} deleteReport={deleteReport} pickEventPhoto={pickEventPhoto} onError={setError} />) : <View style={styles.emptyCard}><Text style={styles.emptyTitle}>Nothing in this filter</Text><Text style={styles.emptyText}>There are no reports matching this status right now.</Text></View>}
+    {visible.length ? visible.map((report) => <ReviewReport key={report.id} report={report} busy={reviewBusy} setBusy={setReviewBusy} reviewReport={reviewReport} checkReportIdentification={checkReportIdentification} removalEstimateAction={removalEstimateAction} addImpactEvent={addImpactEvent} deleteReport={deleteReport} pickEventPhoto={pickEventPhoto} onError={setError} onNotice={setNotice} />) : <View style={styles.emptyCard}><Text style={styles.emptyTitle}>Nothing in this filter</Text><Text style={styles.emptyText}>There are no reports matching this status right now.</Text></View>}
   </ScrollView>;
 }
 
-function ReviewReport({ report, busy, setBusy, reviewReport, removalEstimateAction, correctReportLocation, addImpactEvent, deleteReport, pickEventPhoto, onError }: { report: Report; busy: boolean; setBusy: (value: boolean) => void; reviewReport: SightingsVM['reviewReport']; removalEstimateAction: SightingsVM['removalEstimateAction']; correctReportLocation: SightingsVM['correctReportLocation']; addImpactEvent: SightingsVM['addImpactEvent']; deleteReport: SightingsVM['deleteReport']; pickEventPhoto: SightingsVM['pickEventPhoto']; onError: (value: string) => void }) {
-  const [reason, setReason] = useState('');
-  const [correctedName, setCorrectedName] = useState('');
-  const [scientificName, setScientificName] = useState('');
+function ReviewReport({ report, busy, setBusy, reviewReport, checkReportIdentification, removalEstimateAction, addImpactEvent, deleteReport, pickEventPhoto, onError, onNotice }: { report: Report; busy: boolean; setBusy: (value: boolean) => void; reviewReport: SightingsVM['reviewReport']; checkReportIdentification: SightingsVM['checkReportIdentification']; removalEstimateAction: SightingsVM['removalEstimateAction']; addImpactEvent: SightingsVM['addImpactEvent']; deleteReport: SightingsVM['deleteReport']; pickEventPhoto: SightingsVM['pickEventPhoto']; onError: (value: string) => void; onNotice: (value: string) => void }) {
   const [eventType, setEventType] = useState<'inspection' | 'treatment' | 'follow-up'>('inspection');
   const [eventDate, setEventDate] = useState(new Date().toISOString().slice(0, 10));
   const [eventNote, setEventNote] = useState('');
   const [eventPhoto, setEventPhoto] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [showEventForm, setShowEventForm] = useState(false);
   const [coverage, setCoverage] = useState(report.coverageAreaSqFt ? String(report.coverageAreaSqFt) : '');
-  const [showLocationForm, setShowLocationForm] = useState(false);
-  const [correctedPoint, setCorrectedPoint] = useState<Coordinate>({ latitude: report.latitude, longitude: report.longitude });
+  const [expandedPhoto, setExpandedPhoto] = useState<string | null>(null);
   const statusOptions = transitions[report.reviewStatus] || [];
 
   const saveReview = async (status: string) => {
-    if (!reason.trim()) return onError('Add a public reason before applying a review status.');
-    const coverageValue = coverage.trim() ? Number(coverage) : undefined;
-    if (coverage.trim() && (!Number.isFinite(coverageValue) || Number(coverageValue) < 1 || Number(coverageValue) > 43_560)) return onError('Coverage must be from 1 to 43,560 square feet.');
     setBusy(true); onError('');
-    try { await reviewReport(report, status, reason, correctedName, scientificName, coverageValue); setReason(''); setCorrectedName(''); setScientificName(''); }
+    try { await reviewReport(report, status); }
     catch (cause) { onError(cause instanceof Error ? cause.message : 'Could not update report.'); }
+    finally { setBusy(false); }
+  };
+  const saveIdentificationCheck = async (confirmed: boolean) => {
+    setBusy(true); onError(''); onNotice('');
+    try {
+      await checkReportIdentification(report.id, confirmed);
+      onNotice(confirmed
+        ? 'Saved: the plant identification matches the photo.'
+        : 'Saved: identification flagged and report moved to Needs review. It may no longer appear in the current status filter.');
+    }
+    catch (cause) { onError(cause instanceof Error ? cause.message : 'Could not save the plant identification check.'); }
     finally { setBusy(false); }
   };
   const runEstimateAction = async (action: 'request' | 'retry' | 'reassess') => {
@@ -90,12 +94,6 @@ function ReviewReport({ report, busy, setBusy, reviewReport, removalEstimateActi
     setBusy(true); onError('');
     try { await removalEstimateAction(report.id, action, amount); }
     catch (cause) { onError(cause instanceof Error ? cause.message : 'Could not update the removal estimate.'); }
-    finally { setBusy(false); }
-  };
-  const saveLocation = async () => {
-    setBusy(true); onError('');
-    try { await correctReportLocation(report.id, correctedPoint); setShowLocationForm(false); }
-    catch (cause) { onError(cause instanceof Error ? cause.message : 'Could not correct the report location.'); }
     finally { setBusy(false); }
   };
   const saveEvent = async () => {
@@ -108,17 +106,25 @@ function ReviewReport({ report, busy, setBusy, reviewReport, removalEstimateActi
   const confirmDelete = () => Alert.alert('Delete this report?', 'This permanently removes the report and its photos, activity, and event history.', [{ text: 'Cancel', style: 'cancel' }, { text: 'Delete report', style: 'destructive', onPress: () => { setBusy(true); void deleteReport(report.id).catch((cause) => onError(cause.message)).finally(() => setBusy(false)); } }]);
 
   return <View style={{ backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, borderRadius: 18, padding: 13, marginBottom: 12 }}>
-    <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>{report.photoUrl ? <Image source={{ uri: report.photoUrl }} style={{ width: 70, height: 70, borderRadius: 12 }} /> : null}<View style={{ flex: 1 }}><Text style={{ color: colors.ink, fontSize: 15, fontWeight: '900' }}>{report.speciesName}</Text>{report.scientificName ? <Text style={{ color: colors.muted, fontSize: 11, fontStyle: 'italic', marginTop: 2 }}>{report.scientificName}</Text> : null}<Text style={{ color: colors.green, fontSize: 10, fontWeight: '800', marginTop: 5 }}>{pretty(report.reviewStatus)} · {report.isFiscListed ? report.listedCategory : 'Possible unlisted'}</Text></View></View>
+    <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>{report.photoUrl ? <Pressable accessibilityRole="button" accessibilityLabel="Enlarge primary report photo" onPress={() => setExpandedPhoto(report.photoUrl!)}><Image source={{ uri: report.photoUrl }} style={{ width: 70, height: 70, borderRadius: 12 }} /></Pressable> : null}<View style={{ flex: 1 }}><Text style={{ color: colors.ink, fontSize: 15, fontWeight: '900' }}>{report.speciesName}</Text>{report.scientificName ? <Text style={{ color: colors.muted, fontSize: 11, fontStyle: 'italic', marginTop: 2 }}>{report.scientificName}</Text> : null}<Text style={{ color: colors.green, fontSize: 10, fontWeight: '800', marginTop: 5 }}>{pretty(report.reviewStatus)} · {report.isFiscListed ? report.listedCategory : 'Possible unlisted'}</Text></View></View>
     <Text style={styles.helperText}>Submitted by {report.reporter?.displayName || 'Community member'} · {new Date(report.observedAt).toLocaleString()}</Text>
-    <Text style={styles.helperText}>Moderator coordinates: {report.latitude.toFixed(5)}, {report.longitude.toFixed(5)} · {report.exactLocationPublic ? 'exact pin public' : 'public pin approximate'}</Text>
-    <Pressable onPress={() => setShowLocationForm((visible) => !visible)} style={{ paddingVertical: 10 }}><Text style={{ color: colors.green, fontSize: 11, fontWeight: '900' }}>{showLocationForm ? 'Close location correction' : 'Correct map pin'}</Text></Pressable>
-    {showLocationForm ? <View style={{ marginBottom: 10 }}><MapPanel center={correctedPoint} reports={[]} selectable onPin={setCorrectedPoint} height={220} /><Text style={styles.helperText}>Move the pin to the observed location. Saving rechecks Florida and county eligibility.</Text><ActionButton title={busy ? 'Saving…' : 'Save corrected location'} disabled={busy} onPress={() => void saveLocation()} small /></View> : null}
+    <View style={{ marginTop: 10, marginBottom: 4 }}><Text style={{ color: colors.ink, fontSize: 11, fontWeight: '800', marginBottom: 6 }}>Reported location</Text><MapPanel center={{ latitude: report.latitude, longitude: report.longitude }} reports={[report]} height={190} /></View>
     {report.note ? <Text style={{ color: colors.ink, fontSize: 12, lineHeight: 17, marginTop: 8 }}>“{report.note}”</Text> : null}
-    {(report.photos || []).length > 1 ? <ScrollView horizontal contentContainerStyle={{ gap: 7, marginTop: 9 }}>{report.photos!.map((photo) => <Image key={photo.id} source={{ uri: photo.url }} style={{ width: 105, height: 85, borderRadius: 10 }} />)}</ScrollView> : null}
-    <TextInput value={correctedName} onChangeText={setCorrectedName} placeholder={`Correct identification (currently ${report.speciesName})`} placeholderTextColor="#87938A" style={[styles.searchInput, { marginTop: 12 }]} />
-    {correctedName.trim() ? <TextInput value={scientificName} onChangeText={setScientificName} placeholder="Correct scientific name (optional)" placeholderTextColor="#87938A" style={[styles.searchInput, { marginTop: 7 }]} /> : null}
-    <TextInput value={reason} onChangeText={setReason} placeholder="Public reason for this review (required)" placeholderTextColor="#87938A" multiline maxLength={500} style={[styles.searchInput, { minHeight: 65, marginTop: 7, paddingTop: 10 }]} />
-    {report.reviewStatus !== 'verified' && report.isFiscListed ? <View style={{ marginTop: 10 }}><TextInput value={coverage} onChangeText={setCoverage} keyboardType="decimal-pad" placeholder="Optional infested coverage in sq ft (max 43,560)" placeholderTextColor="#87938A" style={styles.searchInput} /><Text style={styles.helperText}>Entering coverage here queues an estimate after verification. Leave blank to verify without an estimate.</Text></View> : null}
+    {(report.photos || []).length > 1 ? <ScrollView horizontal contentContainerStyle={{ gap: 7, marginTop: 9 }}>{report.photos!.map((photo) => <Pressable key={photo.id} accessibilityRole="button" accessibilityLabel="Enlarge supporting report photo" onPress={() => setExpandedPhoto(photo.url)}><Image source={{ uri: photo.url }} style={{ width: 105, height: 85, borderRadius: 10 }} /></Pressable>)}</ScrollView> : null}
+    {(report.photoUrl || report.photos?.length) ? <Text style={{ color: colors.muted, fontSize: 9, marginTop: 5 }}>Tap a photo to enlarge.</Text> : null}
+    <View style={{ marginTop: 12, padding: 11, borderRadius: 12, backgroundColor: '#F1F3EC' }}>
+      <Text style={{ color: colors.ink, fontSize: 12, fontWeight: '900' }}>Is this the right plant?</Text>
+      <Text style={styles.helperText}>Compare the identification with the report photos.</Text>
+      {(() => {
+        const lastCheck = report.activity?.filter((event) => event.type === 'identification_checked').slice(-1)[0];
+        const answer = lastCheck?.publicReason.includes('not matching') ? false : lastCheck?.publicReason.includes('matches the photo') ? true : null;
+        return <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+          <Pressable accessibilityRole="button" disabled={busy} onPress={() => void saveIdentificationCheck(true)} style={{ flex: 1, padding: 10, borderRadius: 9, backgroundColor: answer === true ? colors.green : '#E4E9E0', alignItems: 'center', opacity: busy ? 0.5 : 1 }}><Text style={{ color: answer === true ? colors.white : colors.ink, fontSize: 11, fontWeight: '900' }}>{busy ? 'Saving…' : answer === true ? '✓ Yes, it matches' : 'Yes, it matches'}</Text></Pressable>
+          <Pressable accessibilityRole="button" disabled={busy} onPress={() => void saveIdentificationCheck(false)} style={{ flex: 1, padding: 10, borderRadius: 9, backgroundColor: answer === false ? '#8B5A12' : '#F5EEDF', alignItems: 'center', opacity: busy ? 0.5 : 1 }}><Text style={{ color: answer === false ? colors.white : '#8B5A12', fontSize: 11, fontWeight: '900' }}>{busy ? 'Saving…' : answer === false ? '✓ No, flag it' : 'No, flag it'}</Text></Pressable>
+        </View>;
+      })()}
+      {report.activity?.filter((event) => event.type === 'identification_checked').slice(-1).map((event) => <Text key={event.id} style={{ color: colors.muted, fontSize: 10, marginTop: 8 }}>{event.publicReason} · {new Date(event.occurredAt).toLocaleString()}</Text>)}
+    </View>
     {report.reviewStatus === 'verified' && report.isFiscListed ? <View style={{ marginTop: 13, padding: 12, borderRadius: 13, backgroundColor: '#F1F3EC' }}>
       <Text style={{ color: colors.ink, fontSize: 13, fontWeight: '900' }}>Removal cost estimate</Text>
       <Text style={styles.helperText}>{estimateStatusDescription(report)}{report.estimateCounty ? ` · ${report.estimateCounty} County` : ''}</Text>
@@ -131,7 +137,7 @@ function ReviewReport({ report, busy, setBusy, reviewReport, removalEstimateActi
         <Text style={{ color: colors.muted, fontSize: 10, marginTop: 5 }}>Generated {report.removalEstimate.generatedAt ? new Date(report.removalEstimate.generatedAt).toLocaleString() : 'date unavailable'}</Text>
       </View> : <Text style={styles.helperText}>The report is marked ready, but the API did not return its estimate details. Refresh the queue.</Text> : null}
       <TextInput value={coverage} onChangeText={setCoverage} keyboardType="decimal-pad" placeholder="Infested coverage in square feet (max 43,560)" placeholderTextColor="#87938A" style={[styles.searchInput, { marginTop: 8 }]} />
-      {report.estimateStatus === 'ineligible' ? null : report.estimateStatus === 'stale' ? <ActionButton title={busy ? 'Queueing…' : 'Confirm area & reassess'} disabled={busy} onPress={() => void runEstimateAction('reassess')} small /> : report.estimateStatus === 'unavailable' || report.estimateStatus === 'pending' ? <ActionButton title={busy ? 'Queueing…' : 'Retry estimate now'} disabled={busy} onPress={() => void runEstimateAction('retry')} small /> : <ActionButton title={busy ? 'Queueing…' : report.estimateStatus === 'ready' ? 'Update area & regenerate' : 'Save area & request estimate'} disabled={busy} onPress={() => void runEstimateAction('request')} small />}
+      {report.estimateStatus === 'ineligible' ? null : report.estimateStatus === 'stale' ? <ActionButton title={busy ? 'Queueing…' : 'Confirm area & get estimate'} disabled={busy} onPress={() => void runEstimateAction('reassess')} small /> : report.estimateStatus === 'unavailable' || report.estimateStatus === 'pending' ? <ActionButton title={busy ? 'Queueing…' : 'Retry estimate'} disabled={busy} onPress={() => void runEstimateAction('retry')} small /> : <ActionButton title={busy ? 'Requesting…' : report.estimateStatus === 'ready' ? 'Update estimate' : 'Get estimate'} disabled={busy} onPress={() => void runEstimateAction('request')} small />}
       <Text style={{ color: colors.muted, fontSize: 10, lineHeight: 15, marginTop: 7 }}>Estimate cap: one acre. Verification remains available if estimating fails.</Text>
     </View> : null}
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 7, marginTop: 9 }}>{statusOptions.map((status) => <Pressable key={status} disabled={busy} onPress={() => void saveReview(status)} style={{ backgroundColor: status === 'rejected' ? '#F8E9E6' : colors.pale, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 9, opacity: busy ? 0.5 : 1 }}><Text style={{ color: status === 'rejected' ? colors.red : colors.green, fontSize: 10, fontWeight: '900' }}>Mark {pretty(status)}</Text></Pressable>)}</View>
@@ -145,5 +151,11 @@ function ReviewReport({ report, busy, setBusy, reviewReport, removalEstimateActi
     </View> : null}</> : null}
     <Text style={{ color: colors.muted, fontSize: 10, lineHeight: 15, marginTop: 7 }}>Verified means the sighting was reviewed. Event records are separate evidence and do not imply eradication or ecological recovery.</Text>
     <Pressable onPress={confirmDelete} style={{ alignSelf: 'flex-start', paddingTop: 12 }}><Text style={{ color: colors.red, fontSize: 10, fontWeight: '900' }}>Delete report permanently</Text></Pressable>
+    <Modal visible={Boolean(expandedPhoto)} transparent animationType="fade" onRequestClose={() => setExpandedPhoto(null)}>
+      <Pressable onPress={() => setExpandedPhoto(null)} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.94)', justifyContent: 'center', alignItems: 'center', padding: 18 }}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Close enlarged photo" onPress={() => setExpandedPhoto(null)} style={{ alignSelf: 'flex-end', paddingVertical: 12, paddingHorizontal: 8 }}><Text style={{ color: colors.white, fontSize: 16, fontWeight: '900' }}>Close ✕</Text></Pressable>
+        {expandedPhoto ? <Image source={{ uri: expandedPhoto }} resizeMode="contain" pointerEvents="none" style={{ width: '100%', flex: 1 }} /> : null}
+      </Pressable>
+    </Modal>
   </View>;
 }

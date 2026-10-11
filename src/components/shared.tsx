@@ -110,15 +110,15 @@ const title = selectable ? 'Tap the map to place the sighting pin' : 'Community 
 
 const markerCode = selectable
     ? `let pin=L.marker([${center.latitude},${center.longitude}],{draggable:true}).addTo(map); pin.on('dragend',()=>send(pin.getLatLng())); map.on('click',e=>{pin.setLatLng(e.latlng);send(e.latlng)}); function send(p){window.ReactNativeWebView?.postMessage(JSON.stringify({type:'pin',latitude:p.lat,longitude:p.lng}))}`
-    : `const reports=${data}; for (const r of reports){const marker=L.circleMarker([r.lat,r.lng],{radius:9,color:r.status==='verified'?'#244B36':'#bb7917',weight:2,fillColor:r.status==='verified'?'#4c9169':'#edc56c',fillOpacity:.9}).addTo(map); marker.bindPopup('<b>'+escapeText(r.name)+'</b><br>'+escapeText(r.category)+'<br>Status: '+escapeText(r.status.replace('_',' ')))} function escapeText(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}`;
+    : `const reports=${data}; for (const r of reports){const marker=L.circleMarker([r.lat,r.lng],{radius:9,color:r.status==='verified'?'#244B36':'#bb7917',weight:2,fillColor:r.status==='verified'?'#4c9169':'#edc56c',fillOpacity:.9}).addTo(map); marker.bindPopup('<b>'+escapeText(r.name)+'</b><br>'+escapeText(r.category)+'<br>Status: '+escapeText(r.status.replace('_',' '))+'<br><button class="sighting-link" id="sighting-'+escapeText(r.id)+'" type="button">View this plant in Sightings</button>'); marker.on('popupopen',()=>{const button=document.getElementById('sighting-'+r.id); if(button) button.onclick=()=>window.ReactNativeWebView?.postMessage(JSON.stringify({type:'openSighting',reportId:r.id}))})} function escapeText(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}`;
 
-  return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><style>html,body,#map{height:100%;margin:0;background:#eef3eb;font-family:-apple-system,BlinkMacSystemFont,sans-serif}.hint{position:absolute;z-index:500;top:10px;left:50%;transform:translateX(-50%);padding:7px 11px;border-radius:20px;background:#fff;color:#18352b;font-size:12px;box-shadow:0 2px 10px #19352b30;white-space:nowrap}</style></head><body><div id="map"></div><div class="hint">${title}</div><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script>const map=L.map('map',{zoomControl:true}).setView([${center.latitude},${center.longitude}],${selectable ? 15 : 11});L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);${markerCode}</script></body></html>`;
+  return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><style>html,body,#map{height:100%;margin:0;background:#eef3eb;font-family:-apple-system,BlinkMacSystemFont,sans-serif}.hint{position:absolute;z-index:500;top:10px;left:50%;transform:translateX(-50%);padding:7px 11px;border-radius:20px;background:#fff;color:#18352b;font-size:12px;box-shadow:0 2px 10px #19352b30;white-space:nowrap}.sighting-link{margin-top:8px;border:0;border-radius:7px;padding:7px 9px;background:#244B36;color:#fff;font-weight:700}</style></head><body><div id="map"></div><div class="hint">${title}</div><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script>const map=L.map('map',{zoomControl:true}).setView([${center.latitude},${center.longitude}],${selectable ? 15 : 11});L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);${markerCode}</script></body></html>`;
 
 }
 
 
 
-export function MapPanel({ center, reports, selectable = false, onPin, height = 330 }: { center: Coordinate; reports: Report[]; selectable?: boolean; onPin?: (point: Coordinate) => void; height?: number }) {
+export function MapPanel({ center, reports, selectable = false, onPin, onReportSelect, height = 330 }: { center: Coordinate; reports: Report[]; selectable?: boolean; onPin?: (point: Coordinate) => void; onReportSelect?: (report: Report) => void; height?: number }) {
 
 const html = useMemo(() => createMapHtml(center, reports, selectable), [center.latitude, center.longitude, reports, selectable]);
 
@@ -129,6 +129,10 @@ const handleMessage = (event: WebViewMessageEvent) => {
 const message = JSON.parse(event.nativeEvent.data);
 
       if (message.type === 'pin' && Number.isFinite(message.latitude) && Number.isFinite(message.longitude)) onPin?.({ latitude: message.latitude, longitude: message.longitude });
+      if (message.type === 'openSighting' && typeof message.reportId === 'string') {
+        const report = reports.find((item) => item.id === message.reportId);
+        if (report) onReportSelect?.(report);
+      }
 
     } catch { /* Ignore non-map messages. */ }
 

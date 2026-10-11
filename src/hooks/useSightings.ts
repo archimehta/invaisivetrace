@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Location from 'expo-location';
@@ -32,6 +32,8 @@ const [userMetrics, setUserMetrics] = useState<{ reportsSubmitted: number; verif
 const [moderatorMetrics, setModeratorMetrics] = useState<{ metrics: { registeredUsers: number; reportsSubmitted: number; verifiedReports: number; awaitingReview: number; inspections?: number; treatments?: number; followUps?: number }; contributors: { id: string; displayName: string; email: string; reportsSubmitted: number; verifiedReports: number; awaitingReview: number; lastReportAt?: string }[] } | null>(null);
 const [reviewReports, setReviewReports] = useState<Report[]>([]);
 const [reviewBusy, setReviewBusy] = useState(false);
+const [sightingsSearchRequest, setSightingsSearchRequest] = useState<{ query: string; reportId: string; requestId: number } | null>(null);
+const sightingsNavigationRequest = useRef(0);
 const [communityMetrics, setCommunityMetrics] = useState<CommunityMetrics | null>(null);
 const [communityTrends, setCommunityTrends] = useState<CommunityTrends | null>(null);
 const [trendsLoading, setTrendsLoading] = useState(false);
@@ -61,6 +63,8 @@ const [note, setNote] = useState('');
 const [exactLocationPublic, setExactLocationPublic] = useState(false);
 
 const [location, setLocation] = useState<Coordinate | null>(null);
+const [mapCenter, setMapCenter] = useState<Coordinate | null>(null);
+const [mapLocationMessage, setMapLocationMessage] = useState('Your location has not been checked yet.');
 
 const [locationMessage, setLocationMessage] = useState('Use your location or tap the map to position the sighting pin.');
 
@@ -220,9 +224,9 @@ const filteredSpecies = useMemo(() => {
 
 const query = search.trim().toLocaleLowerCase();
 
-    if (!query) return catalog.slice(0, 10);
+    if (!query) return catalog;
 
-    return catalog.filter((item) => [item.scientificName, ...item.scientificSynonyms, ...item.commonNames].some((name) => name.toLocaleLowerCase().includes(query))).slice(0, 12);
+    return catalog.filter((item) => [item.scientificName, ...item.scientificSynonyms, ...item.commonNames].some((name) => name.toLocaleLowerCase().includes(query)));
 
   }, [search]);
 
@@ -423,6 +427,32 @@ const point = { latitude: current.coords.latitude, longitude: current.coords.lon
 
   };
 
+const locateMapCenter = useCallback(async () => {
+    setMapLocationMessage('Finding your location…');
+    try {
+      const permission = await Location.requestForegroundPermissionsAsync();
+      if (permission.status !== 'granted') {
+        setMapLocationMessage('Location permission is off. Showing the community map; enable location to center near you.');
+        return;
+      }
+      const current = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      setMapCenter({ latitude: current.coords.latitude, longitude: current.coords.longitude });
+      setMapLocationMessage('Map centered near your location.');
+    } catch (error) {
+      console.warn('Map location lookup failed:', error);
+      setMapLocationMessage('Could not get your location. Showing the community map instead.');
+    }
+  }, []);
+
+const openSightingsForPlant = (report: Report) => {
+    const query = report.scientificName?.trim() || report.speciesName.trim();
+    if (!query || !report.id) return;
+    setSightingsSearchRequest({ query, reportId: report.id, requestId: ++sightingsNavigationRequest.current });
+    setTab('sightings');
+  };
+
+const clearSightingsSearchRequest = useCallback(() => setSightingsSearchRequest(null), []);
+
 const submitReport = async () => {
 
 const speciesName = selectedSpecies?.commonNames[0] || manualName.trim();
@@ -485,13 +515,29 @@ const scientificName = selectedSpecies?.scientificName || (!manualMode || manual
 
   };
 
-const reviewReport = async (reportOrId: Report | string, status: string, reason?: string, speciesName?: string, scientificName?: string, coverageAreaSqFt?: number) => {
+const reviewReport = async (reportOrId: Report | string, status: string) => {
     if (!authToken) throw new Error('Sign in as moderator to review reports.');
     const reportId = typeof reportOrId === 'string' ? reportOrId : reportOrId.id;
-    const publicReason = reason?.trim() || (status === 'verified' ? 'Confirmed by the InvAIsive Trace community moderator.' : 'Flagged for additional review by the community moderator.');
-    const response = await fetch(`${API_URL}/api/reports/${encodeURIComponent(reportId)}/review`, { method: 'POST', headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ status, reason: publicReason, speciesName: speciesName?.trim() || undefined, scientificName: scientificName?.trim() || undefined, coverageAreaSqFt }) });
+    const response = await fetch(`${API_URL}/api/reports/${encodeURIComponent(reportId)}/review`, { method: 'POST', headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || 'Could not update report review.');
+    await Promise.all([refreshReports(), refreshReviewReports(), refreshAccountData(authToken, authUser?.role), refreshCommunityMetrics()]);
+  };
+
+const checkReportIdentification = async (reportId: string, confirmed: boolean) => {
+    if (!authToken) throw new Error('Sign in as moderator to check plant identifications.');
+    const reportPath = `${API_URL}/api/reports/${encodeURIComponent(reportId)}`;
+    const response = await fetch(`${reportPath}/identification-check`, {
+      method: 'POST', headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ confirmed }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const detail = payload.error ? `${payload.error} (HTTP ${response.status})` : `HTTP ${response.status}`;
+      throw new Error(response.status === 404
+        ? `The backend does not have the identification-check endpoint yet (${detail}). Restart it from the updated repo, then try again.`
+        : `Could not save the plant identification check: ${detail}`);
+    }
     await Promise.all([refreshReports(), refreshReviewReports(), refreshAccountData(authToken, authUser?.role), refreshCommunityMetrics()]);
   };
 
@@ -515,17 +561,6 @@ const stopAllRemovalEstimates = async () => {
     if (!response.ok) throw new Error(payload.error || 'Could not stop active removal estimates.');
     await Promise.all([refreshReports(), refreshReviewReports(), refreshCommunityMetrics()]);
     return payload as { cancelledJobs: number; cancelledReports: number };
-  };
-
-const correctReportLocation = async (reportId: string, point: Coordinate) => {
-    if (!authToken) throw new Error('Sign in as a moderator to correct report locations.');
-    const response = await fetch(`${API_URL}/api/reports/${encodeURIComponent(reportId)}/location`, {
-      method: 'PATCH', headers: { Authorization: `Bearer ${authToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(point),
-    });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(payload.error || 'Could not correct the report location.');
-    await Promise.all([refreshReports(), refreshReviewReports()]);
   };
 
 const addImpactEvent = async (reportId: string, type: string, date: string, noteText: string, eventPhoto?: ImagePicker.ImagePickerAsset) => {
@@ -565,6 +600,6 @@ const reportCountLabel = `${reports.length} ${reports.length === 1 ? 'sighting' 
 
 
 
-return {tab,setTab,reports,apiOnline,photo,setPhoto,supportingPhotos,setSupportingPhotos,guess,setGuess,guessMessage,isIdentifying,selectedSpecies,setSelectedSpecies,manualName,setManualName,manualMode,setManualMode,search,setSearch,note,setNote,exactLocationPublic,setExactLocationPublic,location,setLocation:setSightingLocation,locationLabel,locationMessage,setLocationMessage,isSubmitting,refreshReports,refreshCommunityMetrics,communityMetrics,communityTrends,trendsLoading,trendsError,refreshCommunityTrends,filteredSpecies,choosePhoto,identifyPhoto,setCurrentLocation,submitReport,activeCenter,reportCountLabel,authToken,authUser,authMode,setAuthMode,authName,setAuthName,authEmail,setAuthEmail,authPassword,setAuthPassword,authBusy,authenticate,signOut,userMetrics,moderatorMetrics,refreshAccountData,reviewReports,moderationQueue:reviewReports,reviewBusy,setReviewBusy,refreshReviewReports,setLeaderboardVisibility,reviewReport,removalEstimateAction,stopAllRemovalEstimates,correctReportLocation,addImpactEvent,deleteReport,pickEventPhoto};
+return {tab,setTab,reports,apiOnline,photo,setPhoto,supportingPhotos,setSupportingPhotos,guess,setGuess,guessMessage,isIdentifying,selectedSpecies,setSelectedSpecies,manualName,setManualName,manualMode,setManualMode,search,setSearch,note,setNote,exactLocationPublic,setExactLocationPublic,location,setLocation:setSightingLocation,locationLabel,locationMessage,setLocationMessage,mapCenter,mapLocationMessage,locateMapCenter,sightingsSearchRequest,clearSightingsSearchRequest,openSightingsForPlant,isSubmitting,refreshReports,refreshCommunityMetrics,communityMetrics,communityTrends,trendsLoading,trendsError,refreshCommunityTrends,filteredSpecies,choosePhoto,identifyPhoto,setCurrentLocation,submitReport,activeCenter,reportCountLabel,authToken,authUser,authMode,setAuthMode,authName,setAuthName,authEmail,setAuthEmail,authPassword,setAuthPassword,authBusy,authenticate,signOut,userMetrics,moderatorMetrics,refreshAccountData,reviewReports,moderationQueue:reviewReports,reviewBusy,setReviewBusy,refreshReviewReports,setLeaderboardVisibility,reviewReport,checkReportIdentification,removalEstimateAction,stopAllRemovalEstimates,addImpactEvent,deleteReport,pickEventPhoto};
 }
 export type SightingsVM = ReturnType<typeof useSightings>;
